@@ -1,0 +1,303 @@
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--p-color-bg);
+  color: var(--p-color-text);
+  font-family: "ShopifySans", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.Polaris-Page {
+  padding-inline: 0;
+}
+
+.AppFrameCompactHeader {
+  background-color: var(--p-color-bg-surface-secondary);
+  border-bottom: 1px solid var(--p-color-border-subdued);
+}
+
+.AppFrameCompactHeader .Polaris-Button {
+  min-height: 28px;
+}
+
+.AppFrameSecondaryActions {
+  display: flex;
+  align-items: center;
+  gap: var(--p-space-200);
+}
+
+.AppFrameSecondaryActions .Polaris-Button {
+  border-radius: var(--p-border-radius-200);
+  padding-inline: var(--p-space-200);
+  min-height: 32px;
+}
+
+.AppFrameSecondaryActions .Polaris-Button:hover,
+.AppFrameSecondaryActions .Polaris-Button:focus-visible {
+  background-color: var(--p-color-bg-surface-hover);
+}
+
+.CustomerAppHeader {
+  background-color: var(--p-color-bg);
+  background-color:white;
+  border-bottom: 1px solid var(--p-color-border-subdued);
+  padding-inline: var(--p-space-400);
+  padding-block: var(--p-space-300);
+}
+
+@media (min-width: 48em) {
+  .CustomerAppHeader {
+    padding-inline: var(--p-space-800);
+    padding-block: var(--p-space-400);
+  }
+}
+
+.CustomerAppHeaderInner {
+  margin: 0 auto;
+  max-width: calc(var(--pg-layout-width-primary-max) + var(--pg-layout-width-secondary-max) + var(--pg-layout-width-inner-spacing-base));
+}
+
+.CustomerAppHeaderStack {
+  gap: var(--p-space-400);
+}
+
+.CustomerAppHeaderNav {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  column-gap: var(--p-space-200);
+  row-gap: var(--p-space-200);
+}
+
+.CustomerAppHeaderTitleGroup {
+  flex: 1 1 auto;
+  min-width: 220px;
+}
+
+.CustomerAppHeaderTitle {
+  font-weight: 600;
+}
+
+.CustomerAppHeaderMenuGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--p-space-200);
+}
+
+.CustomerAppHeaderLocationMenu {
+  display: flex;
+}
+
+.CustomerAppHeaderLocationMenu .Polaris-Button {
+  min-height: 32px;
+  padding-inline: var(--p-space-200);
+  border-radius: var(--p-border-radius-200);
+}
+
+.CustomerAppHeaderMenuGroup .Polaris-Button {
+  min-height: 32px;
+  padding-inline: var(--p-space-200);
+  border-radius: var(--p-border-radius-200);
+}
+
+.AppFrameEnvironmentModal {
+  max-width: 360px;
+}
+
+.AppFrameEnvironmentModal .Polaris-Button {
+  justify-content: flex-start;
+}
+
+.AppFrameEnvironmentModal .Polaris-Text {
+  line-height: 1.4;
+}
+
+.Polaris-TopBar__SecondaryMenu {
+  display: grid;
+}
+.Polaris-IndexTable__Table .Polaris-Text--bodySm {
+  color: var(--p-color-text-subdued);
+}
+
+.Polaris-IndexTable__Table .Polaris-Badge + .Polaris-Text--bodySm {
+  margin-top: var(--p-space-050);
+}
+
+.integration-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding-inline: var(--p-space-150);
+  border-radius: var(--p-border-radius-200);
+  background-color: var(--p-color-bg-surface-secondary);
+  color: var(--p-color-text-subdued);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.CustomerOrders {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: var(--p-space-600) var(--p-space-500) var(--p-space-800);
+  display: grid;
+  gap: var(--p-space-400);
+}
+
+.CustomerOrders__Controls .Polaris-ButtonGroup {
+  flex-wrap: wrap;
+}
+
+.CustomerOrders__Grid {
+  display: grid;
+  gap: var(--p-space-400);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.CustomerOrderCard__Gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--p-space-200);
+  border-radius: var(--p-border-radius-300);
+  overflow: hidden;
+}
+
+.CustomerOrderCard__Gallery img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+}
+
+.CustomerOrderCard__GalleryMore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--p-color-text);
+}
+
+.CustomerOrdersFooter {
+  padding-block: var(--p-space-300);
+  border-top: 1px solid var(--p-color-border-subdued);
+}
+
+.InlineSectionHeading {
+  align-items: center !important;
+  column-gap: var(--p-space-150) !important;
+  --pc-inline-stack-block-align: center !important;
+  --pc-inline-stack-wrap: nowrap !important;
+  --pc-inline-stack-gap-xs: var(--p-space-150) !important;
+  --pc-inline-stack-gap-sm: var(--p-space-150) !important;
+}
+
+.InlineSectionHeading .Polaris-Icon {
+  margin-block: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.KeyValueList {
+  display: grid;
+  gap: var(--p-space-150);
+}
+
+.KeyValueList__Item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-025);
+}
+
+@media (min-width: 48em) {
+  .KeyValueList {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+}
+
+.CustomerOrdersFooter a {
+  color: var(--p-color-text-subdued);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.CustomerOrdersFooter a:hover,
+.CustomerOrdersFooter a:focus-visible {
+  color: var(--p-color-text);
+  text-decoration: underline;
+}
+
+@media (max-width: 1024px) {
+  .CustomerOrders {
+    padding-inline: var(--p-space-400);
+  }
+}
+
+.CompanyDetail {
+  display: grid;
+  gap: var(--p-space-400);
+}
+
+.CompanyDetail__MetricRow {
+  display: grid;
+  gap: var(--p-space-300);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.CompanyDetail__UrgentList {
+  display: grid;
+  gap: var(--p-space-200);
+}
+
+.CompanyDetail__UrgentItem {
+  padding: var(--p-space-200) var(--p-space-300);
+  border-radius: var(--p-border-radius-300);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(241, 245, 249, 0.35);
+}
+
+.CompanyDetail__Split {
+  display: grid;
+  gap: var(--p-space-300);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.CompanyDetail__PaymentMethod {
+  padding: var(--p-space-200) var(--p-space-300);
+  border-radius: var(--p-border-radius-300);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: rgba(249, 250, 251, 0.7);
+}
+
+.CompanyDetail__Contact,
+.CompanyDetail__Location {
+  display: grid;
+  gap: var(--p-space-050);
+}
+
+.CompanyDetail__List {
+  margin: 0;
+  padding-left: var(--p-space-500);
+  display: grid;
+  gap: var(--p-space-050);
+}
+
+.Polaris-Icon {
+  margin-right:0;
+}
