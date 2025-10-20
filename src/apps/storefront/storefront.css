@@ -124,7 +124,30 @@
 }
 
 .StorefrontHero {
+  position: relative;
   padding: calc(var(--p-space-800) + 40px) 0 var(--p-space-800);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: white;
+  isolation: isolate;
+}
+
+.StorefrontHero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(9, 17, 34, 0.78) 0%, rgba(9, 17, 34, 0.55) 52%, rgba(9, 17, 34, 0.75) 100%);
+  backdrop-filter: blur(2px);
+  z-index: -1;
+}
+
+.StorefrontHero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(9, 17, 34, 0.35) 0%, rgba(9, 17, 34, 0.65) 100%);
+  z-index: -2;
 }
 
 .StorefrontHero__Inner {
@@ -140,6 +163,21 @@
 .StorefrontHero__Content {
   display: flex;
   flex-direction: column;
+  gap: var(--p-space-400);
+  color: white;
+}
+
+.StorefrontHero__Content .StorefrontHero__Eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--p-space-100);
+  padding: var(--p-space-050) var(--p-space-200);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: white;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .StorefrontHero__Visual {
@@ -270,12 +308,18 @@
   flex-direction: column;
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
 }
 
 .StorefrontProductCard:hover,
 .StorefrontProductCard:focus-within {
   transform: translateY(-4px);
   box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14);
+}
+
+.StorefrontProductCard:focus-visible {
+  outline: 3px solid #1c53b1;
+  outline-offset: 2px;
 }
 
 .StorefrontProductCard__Media {
@@ -470,6 +514,11 @@
   display: grid;
   gap: var(--p-space-400);
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.StorefrontCollectionsPage__Section {
+  display: grid;
+  gap: var(--p-space-300);
 }
 
 .StorefrontCart,

@@ -1,3 +1,4 @@
+import type { KeyboardEvent } from 'react';
 import { Badge, BlockStack, Box, Button, InlineStack, Text, Tooltip } from '@shopify/polaris';
 import { CheckIcon } from '@shopify/polaris-icons';
 
@@ -21,8 +22,24 @@ export function ProductCard({ product, onViewProduct, showCategory = false }: Pr
   const cartItem = state.cart.find((item) => item.handle === product.handle);
   const quoteItem = state.quoteDraft.items.find((item) => item.handle === product.handle);
 
+  const handleNavigate = () => onViewProduct(product.handle);
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleNavigate();
+    }
+  };
+
   return (
-    <div className="StorefrontProductCard">
+    <div
+      className="StorefrontProductCard"
+      role="button"
+      tabIndex={0}
+      onClick={handleNavigate}
+      onKeyDown={handleKeyDown}
+      aria-label={`View details for ${product.title}`}
+    >
       <div className="StorefrontProductCard__Media">
         <img src={product.image} alt={product.title} loading="lazy" />
         {product.badges?.length ? (
@@ -62,35 +79,77 @@ export function ProductCard({ product, onViewProduct, showCategory = false }: Pr
           <InlineStack gap="100" wrap className="StorefrontProductCard__Actions">
             {cartItem ? (
               <>
-                <Button variant="primary" tone="success" icon={CheckIcon} disabled>
+                <Button
+                  variant="primary"
+                  tone="success"
+                  icon={CheckIcon}
+                  disabled
+                  onClick={(event) => event.stopPropagation()}
+                >
                   Added to cart
                 </Button>
-                <Button variant="tertiary" onClick={() => removeCartItem(product.handle)}>
+                <Button
+                  variant="tertiary"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    removeCartItem(product.handle);
+                  }}
+                >
                   Remove from cart
                 </Button>
               </>
             ) : (
-              <Button variant="primary" onClick={() => addToCart(product.handle)}>
+              <Button
+                variant="primary"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  addToCart(product.handle);
+                }}
+              >
                 Add to cart
               </Button>
             )}
             {quoteItem ? (
               <>
-                <Button variant="secondary" tone="success" icon={CheckIcon} disabled>
+                <Button
+                  variant="secondary"
+                  tone="success"
+                  icon={CheckIcon}
+                  disabled
+                  onClick={(event) => event.stopPropagation()}
+                >
                   Added to quote
                 </Button>
-                <Button variant="tertiary" onClick={() => removeQuoteItem(product.handle)}>
+                <Button
+                  variant="tertiary"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    removeQuoteItem(product.handle);
+                  }}
+                >
                   Remove from quote
                 </Button>
               </>
             ) : (
               <Tooltip content="Stage items for a pricing request">
-                <Button variant="secondary" onClick={() => addToQuote(product.handle)}>
+                <Button
+                  variant="secondary"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    addToQuote(product.handle);
+                  }}
+                >
                   Add to quote
                 </Button>
               </Tooltip>
             )}
-            <Button variant="tertiary" onClick={() => onViewProduct(product.handle)}>
+            <Button
+              variant="tertiary"
+              onClick={(event) => {
+                event.stopPropagation();
+                onViewProduct(product.handle);
+              }}
+            >
               View details
             </Button>
           </InlineStack>

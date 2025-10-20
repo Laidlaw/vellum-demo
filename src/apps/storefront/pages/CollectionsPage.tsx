@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { BlockStack, Button, InlineStack, Text } from '@shopify/polaris';
 
+import { ProductGrid } from '../components/ProductGrid';
 import { CollectionCard } from '../components/CollectionCard';
-import { collections } from '../data/storefrontData';
+import { collections, products } from '../data/storefrontData';
 
 export function CollectionsPage() {
   const navigate = useNavigate();
@@ -28,11 +29,26 @@ export function CollectionsPage() {
           </Text>
         </BlockStack>
 
-        <div className="StorefrontCollectionsPage__Grid">
-          {collections.map((collection) => (
-            <CollectionCard key={collection.id} collection={collection} />
-          ))}
-        </div>
+        <BlockStack gap="500">
+          {collections.map((collection) => {
+            const collectionProducts = collection.productHandles
+              .map((handle) => products.find((product) => product.handle === handle))
+              .filter((product): product is NonNullable<typeof product> => Boolean(product));
+
+            return (
+              <section key={collection.id} className="StorefrontCollectionsPage__Section">
+                <CollectionCard collection={collection} />
+                {collectionProducts.length ? (
+                  <ProductGrid
+                    products={collectionProducts}
+                    onViewProduct={(handle) => navigate(`/storefront/products/${handle}`)}
+                    showCategory
+                  />
+                ) : null}
+              </section>
+            );
+          })}
+        </BlockStack>
       </BlockStack>
     </div>
   );

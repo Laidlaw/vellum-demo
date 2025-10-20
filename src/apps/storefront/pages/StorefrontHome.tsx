@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { BlockStack, Button, Divider, InlineStack, Text } from '@shopify/polaris';
 
+import heroBackground from '../../../assets/scott-blake.webp';
+
 import { CollectionCard } from '../components/CollectionCard';
 import { ProductGrid } from '../components/ProductGrid';
 import {
@@ -18,12 +20,12 @@ export function StorefrontHome() {
 
   return (
     <div className="StorefrontHome">
-      <section className="StorefrontHero">
+      <section className="StorefrontHero" style={{ backgroundImage: `url(${heroBackground})` }}>
         <div className="StorefrontHero__Inner">
           <div className="StorefrontHero__Content">
             <BlockStack gap="400">
               <BlockStack gap="200">
-                <Text as="p" tone="subdued" variant="bodySm">
+                <Text as="p" variant="bodySm" className="StorefrontHero__Eyebrow">
                   Built for industrial buyers
                 </Text>
                 <Text as="h1" variant="headingXl">
