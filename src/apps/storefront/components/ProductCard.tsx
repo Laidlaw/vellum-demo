@@ -22,16 +22,21 @@ export function ProductCard({ product, onViewProduct, showCategory = false }: Pr
   const quoteItem = state.quoteDraft.items.find((item) => item.handle === product.handle);
 
   return (
-    <Box padding="200" className="StorefrontProductCard">
-      <BlockStack gap="300">
-        <div className="StorefrontProductCard__Media">
-          <img src={product.image} alt={product.title} loading="lazy" />
-          {product.badges?.map((badge) => (
-            <Badge key={badge} tone="success">
-              {badge}
-            </Badge>
-          ))}
-        </div>
+    <div className="StorefrontProductCard">
+      <div className="StorefrontProductCard__Media">
+        <img src={product.image} alt={product.title} loading="lazy" />
+        {product.badges?.length ? (
+          <div className="StorefrontProductCard__BadgeList">
+            {product.badges.map((badge) => (
+              <Badge key={badge} tone="success">
+                {badge}
+              </Badge>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      <Box padding="400" className="StorefrontProductCard__Content">
         <BlockStack gap="100">
           {showCategory ? (
             <Text as="p" tone="subdued" variant="bodySm">
@@ -45,7 +50,7 @@ export function ProductCard({ product, onViewProduct, showCategory = false }: Pr
             {product.description}
           </Text>
         </BlockStack>
-        <InlineStack align="space-between" blockAlign="center">
+        <div className="StorefrontProductCard__Footer">
           <BlockStack gap="050">
             <Text as="span" variant="headingMd">
               {currencyFormatter.format(product.price)}
@@ -54,7 +59,7 @@ export function ProductCard({ product, onViewProduct, showCategory = false }: Pr
               {product.unit}
             </Text>
           </BlockStack>
-          <InlineStack gap="100" wrap>
+          <InlineStack gap="100" wrap className="StorefrontProductCard__Actions">
             {cartItem ? (
               <>
                 <Button variant="primary" tone="success" icon={CheckIcon} disabled>
@@ -89,8 +94,8 @@ export function ProductCard({ product, onViewProduct, showCategory = false }: Pr
               View details
             </Button>
           </InlineStack>
-        </InlineStack>
-      </BlockStack>
-    </Box>
+        </div>
+      </Box>
+    </div>
   );
 }

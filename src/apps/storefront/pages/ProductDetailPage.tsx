@@ -49,8 +49,17 @@ export function ProductDetailPage() {
   return (
     <div className="StorefrontProductDetail">
       <aside className="StorefrontProductDetail__Gallery">
-        <img src={product.image} alt={product.title} />
-        <Badge tone="info">{product.category}</Badge>
+        <div className="StorefrontProductDetail__Media">
+          <img src={product.image} alt={product.title} />
+          <div className="StorefrontProductDetail__BadgeList">
+            <Badge tone="info">{product.category}</Badge>
+            {product.badges?.map((badge) => (
+              <Badge key={badge} tone="success">
+                {badge}
+              </Badge>
+            ))}
+          </div>
+        </div>
       </aside>
       <section className="StorefrontProductDetail__Info">
         <BlockStack gap="400">
@@ -65,16 +74,38 @@ export function ProductDetailPage() {
           <Text as="p" variant="bodyMd">
             {product.description}
           </Text>
+          <div className="StorefrontProductDetail__Meta">
+            <InlineStack gap="200" wrap>
+              <div className="StorefrontProductDetail__MetaItem">
+                <Text as="span" tone="subdued" variant="bodySm">
+                  Category
+                </Text>
+                <Text as="span" variant="bodyMd">
+                  {product.category}
+                </Text>
+              </div>
+              <div className="StorefrontProductDetail__MetaItem">
+                <Text as="span" tone="subdued" variant="bodySm">
+                  Lead time
+                </Text>
+                <Badge tone="success">{product.leadTime}</Badge>
+              </div>
+              <div className="StorefrontProductDetail__MetaItem">
+                <Text as="span" tone="subdued" variant="bodySm">
+                  Unit
+                </Text>
+                <Text as="span" variant="bodyMd">
+                  {product.unit}
+                </Text>
+              </div>
+            </InlineStack>
+          </div>
           <div className="StorefrontProductDetail__Pricing">
             <div>
               <Text as="p" variant="headingLg">
                 {currencyFormatter.format(product.price)}
               </Text>
-              <Text as="span" tone="subdued" variant="bodySm">
-                {product.unit}
-              </Text>
             </div>
-            <Badge tone="success">{product.leadTime}</Badge>
           </div>
           <div className="StorefrontProductDetail__Highlights">
             <Text as="h3" variant="headingSm">
