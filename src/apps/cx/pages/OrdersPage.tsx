@@ -49,6 +49,32 @@ export function OrdersPage() {
     }));
   }, [activeLocationId]);
 
+  const orderSummary = useMemo(() => {
+    const scopedOrders = ORDER_CARDS.filter(
+      (order) => activeLocationId === ALL_LOCATIONS_ID || order.locationId === activeLocationId,
+    );
+
+    const awaitingPayment = scopedOrders.filter((order) =>
+      order.fulfillmentLabel.toLowerCase().includes('payment'),
+    );
+    const awaitingApproval = scopedOrders.filter((order) =>
+      order.statusLabel.toLowerCase().includes('approval'),
+    );
+    const inTransit = scopedOrders.filter((order) =>
+      order.statusLabel.toLowerCase().includes('delivery') ||
+      order.fulfillmentLabel.toLowerCase().includes('carrier'),
+    );
+    const totalValue = scopedOrders.reduce((sum, order) => sum + order.total, 0);
+
+    return {
+      scopedOrders,
+      awaitingPaymentCount: awaitingPayment.length,
+      awaitingApprovalCount: awaitingApproval.length,
+      inTransitCount: inTransit.length,
+      totalValue,
+    };
+  }, [activeLocationId]);
+
   return (
     <div className="CustomerOrders">
       <BlockStack gap="400">
@@ -60,6 +86,43 @@ export function OrdersPage() {
             Orders
           </Text>
         </BlockStack>
+
+        <Card>
+          <BlockStack gap="300">
+            <InlineStack gap="200" blockAlign="center" wrap>
+              <Icon source={FilterIcon} tone="subdued" />
+              <Text tone="subdued" variant="bodySm">
+                {orderSummary.scopedOrders.length} orders in view · {orderSummary.awaitingPaymentCount} awaiting payment · {orderSummary.awaitingApprovalCount} pending approval
+              </Text>
+            </InlineStack>
+            <div className="KeyValueList">
+              <div className="KeyValueList__Item">
+                <Text variant="headingLg">{formatCurrency(orderSummary.totalValue)}</Text>
+                <Text tone="subdued" variant="bodySm">
+                  Total value across filtered orders
+                </Text>
+              </div>
+              <div className="KeyValueList__Item">
+                <Text variant="headingLg">{orderSummary.awaitingPaymentCount}</Text>
+                <Text tone="subdued" variant="bodySm">
+                  Awaiting payment
+                </Text>
+              </div>
+              <div className="KeyValueList__Item">
+                <Text variant="headingLg">{orderSummary.awaitingApprovalCount}</Text>
+                <Text tone="subdued" variant="bodySm">
+                  Approvals needed
+                </Text>
+              </div>
+              <div className="KeyValueList__Item">
+                <Text variant="headingLg">{orderSummary.inTransitCount}</Text>
+                <Text tone="subdued" variant="bodySm">
+                  Out for delivery
+                </Text>
+              </div>
+            </div>
+          </BlockStack>
+        </Card>
 
         <Card roundedAbove="sm">
           <Box padding="300">

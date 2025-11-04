@@ -6,6 +6,7 @@ import { CustomerApp } from './apps/cx/CustomerApp';
 import { DashboardPage as CustomerDashboardPage } from './apps/cx/pages/DashboardPage';
 import { QuotesPage } from './apps/cx/pages/QuotesPage';
 import { QuoteDetailPage } from './apps/cx/pages/QuoteDetailPage';
+import { QuoteApprovalPage } from './apps/cx/pages/QuoteApprovalPage';
 import { InvoicesPage } from './apps/cx/pages/InvoicesPage';
 import { InvoiceDetailPage } from './apps/cx/pages/InvoiceDetailPage';
 import { PaymentPage } from './apps/cx/pages/PaymentPage';
@@ -39,6 +40,7 @@ export const router = createBrowserRouter(
         <Route path="orders" element={<OrdersPage />} />
         <Route path="quotes" element={<QuotesPage />} />
         <Route path="quotes/:quoteId" element={<QuoteDetailPage />} />
+        <Route path="quotes/:quoteId/approve" element={<QuoteApprovalPage />} />
         <Route path="invoices" element={<InvoicesPage />} />
         <Route path="invoices/:invoiceId" element={<InvoiceDetailPage />} />
         <Route path="invoices/:invoiceId/pay" element={<PaymentPage />} />

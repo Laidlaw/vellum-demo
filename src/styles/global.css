@@ -71,32 +71,47 @@ body {
 }
 
 .CustomerAppHeaderStack {
-  gap: var(--p-space-400);
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-200);
 }
 
-.CustomerAppHeaderNav {
+.CustomerAppHeaderRow {
   display: flex;
   width: 100%;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  column-gap: var(--p-space-200);
-  row-gap: var(--p-space-200);
+  gap: var(--p-space-300);
 }
 
-.CustomerAppHeaderTitleGroup {
+.CustomerAppHeaderPrimaryGroup {
+  display: flex;
+  align-items: center;
   flex: 1 1 auto;
-  min-width: 220px;
+  gap: var(--p-space-200);
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
-.CustomerAppHeaderTitle {
+.CustomerAppHeaderCompany {
+  padding-inline: var(--p-space-150);
+  border-radius: var(--p-border-radius-200);
+}
+
+.CustomerAppHeaderCompany .Polaris-Text {
   font-weight: 600;
 }
 
-.CustomerAppHeaderMenuGroup {
+.CustomerAppHeaderActions {
   display: flex;
   align-items: center;
-  gap: var(--p-space-200);
+  gap: var(--p-space-150);
+}
+
+.CustomerAppHeaderActions .Polaris-Button {
+  min-height: 32px;
+  padding-inline: var(--p-space-200);
+  border-radius: var(--p-border-radius-200);
 }
 
 .CustomerAppHeaderLocationMenu {
@@ -109,10 +124,46 @@ body {
   border-radius: var(--p-border-radius-200);
 }
 
-.CustomerAppHeaderMenuGroup .Polaris-Button {
+.CustomerAppHeaderTabs {
+  flex: 1 1 240px;
+  min-width: 200px;
+}
+
+.CustomerAppHeaderTabs .Polaris-Tabs {
+  width: 100%;
+}
+
+.CustomerAppHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: var(--p-space-150);
+}
+
+.CustomerAppHeaderActions .Polaris-Button {
   min-height: 32px;
   padding-inline: var(--p-space-200);
   border-radius: var(--p-border-radius-200);
+}
+
+@media (max-width: 48em) {
+  .CustomerAppHeaderRow {
+    flex-wrap: wrap;
+    gap: var(--p-space-200);
+  }
+
+  .CustomerAppHeaderPrimaryGroup {
+    flex: 1 1 100%;
+  }
+
+  .CustomerAppHeaderTabs {
+    flex: 1 1 100%;
+  }
+
+  .CustomerAppHeaderActions {
+    width: 100%;
+    justify-content: flex-start;
+    margin-top: var(--p-space-150);
+  }
 }
 
 .AppFrameEnvironmentModal {
@@ -151,6 +202,73 @@ body {
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
+}
+
+.QuoteFiltersBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--p-space-200);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.QuoteFiltersBar__Controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--p-space-150);
+  align-items: center;
+}
+
+.QuoteLifecycleChips .Polaris-ButtonGroup {
+  flex-wrap: wrap;
+  gap: var(--p-space-150);
+}
+
+.QuoteLifecycleChips .Polaris-ButtonGroup__Item {
+  flex: initial;
+}
+
+.QuoteLifecycleChips .Polaris-Button {
+  min-height: 32px;
+  padding-inline: var(--p-space-200);
+  border-radius: var(--p-border-radius-200);
+}
+
+.QuoteLifecycleChip__Badge {
+  display: inline-flex;
+  align-items: center;
+  min-width: 20px;
+  justify-content: center;
+}
+
+.QuoteRowStage {
+  gap: var(--p-space-075);
+}
+
+.QuoteRowActions .Polaris-InlineStack {
+  gap: var(--p-space-150);
+}
+
+.QuoteRowActions .Polaris-Button {
+  padding-inline: var(--p-space-200);
+  min-height: 30px;
+}
+
+.QuoteApprovalOption {
+  border-radius: var(--p-border-radius-300);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.QuoteApprovalOption:hover,
+.QuoteApprovalOption:focus-within {
+  border-color: var(--p-color-border-strong);
+  box-shadow: 0 0 0 1px var(--p-color-border-strong) inset;
+}
+
+.QuoteApprovalOption--selected {
+  background-color: var(--p-color-bg-surface-secondary);
+  border-color: var(--p-color-border-strong);
+  box-shadow: 0 0 0 1px var(--p-color-border-strong) inset;
 }
 
 .CustomerOrders {
@@ -223,6 +341,50 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--p-space-025);
+}
+
+.QuoteDetailSummaryGrid {
+  display: grid;
+  gap: var(--p-space-300);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.QuoteDetailSummaryCell {
+  display: grid;
+  gap: var(--p-space-050);
+}
+
+.QuoteDetailCard {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.QuoteDetailCard .Polaris-BlockStack {
+  flex: 1;
+}
+
+.DashboardSnapshot {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.DashboardSnapshot .Polaris-BlockStack {
+  flex: 1;
+}
+
+.QuoteTimelineEvent {
+  padding-inline-start: var(--p-space-200);
+  border-left: 2px solid var(--p-color-border-subdued);
+}
+
+.QuoteTimelineEvent:first-of-type {
+  padding-block-start: var(--p-space-050);
+}
+
+.QuoteTimelineEvent:last-of-type {
+  padding-block-end: var(--p-space-050);
 }
 
 @media (min-width: 48em) {

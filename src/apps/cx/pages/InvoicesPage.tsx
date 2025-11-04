@@ -176,6 +176,26 @@ export function InvoicesPage() {
     },
   );
 
+  const invoiceSummary = useMemo(() => {
+    const outstanding = filteredInvoices.filter((invoice) =>
+      ['due', 'overdue', 'partial', 'draft'].includes(invoice.status),
+    );
+    const overdue = filteredInvoices.filter((invoice) => invoice.status === 'overdue');
+    const paid = filteredInvoices.filter((invoice) => invoice.status === 'paid');
+
+    const outstandingBalance = outstanding.reduce((sum, invoice) => sum + invoice.balanceDue.amount, 0);
+    const overdueBalance = overdue.reduce((sum, invoice) => sum + invoice.balanceDue.amount, 0);
+    const paidVolume = paid.reduce((sum, invoice) => sum + invoice.total.amount, 0);
+
+    return {
+      outstandingCount: outstanding.length,
+      outstandingBalance,
+      overdueCount: overdue.length,
+      overdueBalance,
+      paidVolume,
+    };
+  }, [filteredInvoices]);
+
   const bulkActions = [
     { content: 'Send reminder', onAction: () => {} },
     { content: 'Apply credit', onAction: () => {} },
@@ -283,20 +303,45 @@ export function InvoicesPage() {
     >
       <BlockStack gap="400">
         <Card>
-          <InlineStack align="space-between" blockAlign="center">
-            <InlineStack gap="200" blockAlign="center">
-              <Icon source={PaymentIcon} tone="subdued" />
-              <Text as="h2" variant="headingLg">
-                Invoices
-              </Text>
+          <BlockStack gap="300">
+            <InlineStack align="space-between" blockAlign="center" wrap>
+              <InlineStack gap="200" blockAlign="center" wrap>
+                <Icon source={PaymentIcon} tone="subdued" />
+                <BlockStack gap="050">
+                  <Text as="h2" variant="headingLg">
+                    Accounts receivable
+                  </Text>
+                  <Text tone="subdued" variant="bodySm">
+                    {filteredInvoices.length} invoices in view · {invoiceSummary.outstandingCount} outstanding · {invoiceSummary.overdueCount} overdue
+                  </Text>
+                </BlockStack>
+              </InlineStack>
+              <ButtonGroup>
+                <Button>Export CSV</Button>
+                <Button variant="primary" disabled>
+                  Send reminders
+                </Button>
+              </ButtonGroup>
             </InlineStack>
-            <ButtonGroup>
-              <Button>Export CSV</Button>
-              <Button variant="primary" disabled>
-                Send reminders
-              </Button>
-            </ButtonGroup>
-          </InlineStack>
+            <div className="KeyValueList">
+              <div className="KeyValueList__Item">
+                <Text variant="headingLg">{formatCurrency(invoiceSummary.outstandingBalance)}</Text>
+                <Text tone="subdued" variant="bodySm">Outstanding balance</Text>
+              </div>
+              <div className="KeyValueList__Item">
+                <Text variant="headingLg">{formatCurrency(invoiceSummary.overdueBalance)}</Text>
+                <Text tone="subdued" variant="bodySm">Overdue balance</Text>
+              </div>
+              <div className="KeyValueList__Item">
+                <Text variant="headingLg">{invoiceSummary.outstandingCount}</Text>
+                <Text tone="subdued" variant="bodySm">Invoices awaiting payment</Text>
+              </div>
+              <div className="KeyValueList__Item">
+                <Text variant="headingLg">{formatCurrency(invoiceSummary.paidVolume)}</Text>
+                <Text tone="subdued" variant="bodySm">Paid in selected range</Text>
+              </div>
+            </div>
+          </BlockStack>
         </Card>
 
         <Card padding="0">

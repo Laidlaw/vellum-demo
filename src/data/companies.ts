@@ -51,6 +51,16 @@ export const COMPANIES: Company[] = [
         locationIds: ['loc-abstract-hq', 'loc-abstract-south-yard'],
         lastActiveAt: '2024-09-09T20:05:00Z',
       },
+      {
+        id: 'contact-nina-patel',
+        firstName: 'Nina',
+        lastName: 'Patel',
+        email: 'nina.patel@abstractindustrial.com',
+        role: 'approver',
+        phone: '+1-917-555-0119',
+        locationIds: ['loc-abstract-hq'],
+        lastActiveAt: '2024-10-20T14:48:00Z',
+      },
     ],
     locations: [
       {

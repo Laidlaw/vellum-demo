@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Badge,
   BlockStack,
@@ -9,7 +10,6 @@ import {
   Icon,
   InlineStack,
   Page,
-  ProgressBar,
   Text,
 } from '@shopify/polaris';
 import {
@@ -66,6 +66,7 @@ function getDaysUntil(dateString: string) {
 
 export function DashboardPage() {
   const { company, activeLocationId, activeLocation, locations } = useCustomerPortalContext();
+  const navigate = useNavigate();
 
   const contactLocationLookup = useMemo(() => {
     const map = new Map<string, string | undefined>();
@@ -100,7 +101,9 @@ export function DashboardPage() {
   const invoicesWithContext = useMemo<InvoiceInsight[]>(() => {
     if (!company) return [];
     return INVOICES.filter((invoice) => invoice.companyId === company.id).map((invoice) => {
-      const locationId = invoice.quoteId ? quoteLocationLookup.get(invoice.quoteId) ?? fallbackLocationId : fallbackLocationId;
+      const locationId = invoice.quoteId
+        ? quoteLocationLookup.get(invoice.quoteId) ?? fallbackLocationId
+        : fallbackLocationId;
       const daysUntilDue = getDaysUntil(invoice.dueAt);
       const isOutstanding =
         ['due', 'overdue', 'partial'].includes(invoice.status) ||
@@ -185,9 +188,6 @@ export function DashboardPage() {
     order.statusLabel.toLowerCase().includes('approval'),
   );
   const draftOrders = filteredOrders.filter((order) => order.statusLabel === 'Draft');
-  const deliveredOrders = filteredOrders.filter((order) =>
-    order.statusLabel.toLowerCase().includes('delivered'),
-  );
 
   const pendingQuotes = useMemo(() => {
     return quotesForCompany.filter((quote) => {
@@ -197,6 +197,69 @@ export function DashboardPage() {
       return locationId === activeLocationId;
     });
   }, [activeLocationId, quoteLocationLookup, quotesForCompany]);
+
+  const expiringQuotes = useMemo(() => {
+    const now = Date.now();
+    return pendingQuotes.filter((quote) => {
+      if (!quote.expiresAt) return false;
+      const daysUntil = Math.ceil((new Date(quote.expiresAt).getTime() - now) / MS_PER_DAY);
+      return daysUntil >= 0 && daysUntil <= 7;
+    });
+  }, [pendingQuotes]);
+
+  const urgentActions = useMemo<UrgentAction[]>(() => {
+    const actions: UrgentAction[] = [];
+
+    if (overdueInvoices.length) {
+      const invoice = overdueInvoices[0].invoice;
+      actions.push({
+        id: 'overdue',
+        icon: AlertDiamondIcon,
+        tone: 'critical',
+        title: `${overdueInvoices.length} overdue invoice${overdueInvoices.length === 1 ? '' : 's'}`,
+        description: `Oldest due ${formatDate(invoice.dueAt)} • ${formatCurrency(overdueBalance)}`,
+        url: '/cx/invoices',
+      });
+    }
+
+    if (expiringQuotes.length && !actions.some((action) => action.id === 'overdue')) {
+      const quote = expiringQuotes[0];
+      actions.push({
+        id: 'expiring',
+        icon: CalendarIcon,
+        tone: 'attention',
+        title: 'Quotes expiring soon',
+        description: `${expiringQuotes.length} approval${expiringQuotes.length === 1 ? '' : 's'} expiring within a week (next: ${quote.quoteNumber})`,
+        url: '/cx/quotes',
+      });
+    }
+
+    if (awaitingPaymentOrders.length) {
+      const order = awaitingPaymentOrders[0];
+      actions.push({
+        id: 'orders-awaiting-payment',
+        icon: CashDollarIcon,
+        tone: 'attention',
+        title: 'Orders waiting on payment',
+        description: `${awaitingPaymentOrders.length} order${awaitingPaymentOrders.length === 1 ? '' : 's'} like ${order.orderNumber}`,
+        url: '/cx/orders',
+      });
+    }
+
+    if (ordersAwaitingApproval.length) {
+      const order = ordersAwaitingApproval[0];
+      actions.push({
+        id: 'orders-awaiting-approval',
+        icon: ClipboardChecklistIcon,
+        tone: 'attention',
+        title: 'Orders awaiting approval',
+        description: `${ordersAwaitingApproval.length} draft order${ordersAwaitingApproval.length === 1 ? '' : 's'} (next: ${order.orderNumber})`,
+        url: '/cx/orders',
+      });
+    }
+
+    return actions.slice(0, 3);
+  }, [awaitingPaymentOrders, expiringQuotes, ordersAwaitingApproval, overdueBalance, overdueInvoices]);
 
   const locationSummaries = useMemo<LocationSummary[]>(() => {
     const relevantLocations =
@@ -240,265 +303,214 @@ export function DashboardPage() {
         nextDueLabel: nextDueInvoice ? formatDate(nextDueInvoice.invoice.dueAt) : undefined,
       };
     });
-  }, [
-    activeLocation,
-    activeLocationId,
-    locations,
-    invoicesWithContext,
-    quotesForCompany,
-    quoteLocationLookup,
-  ]);
+  }, [activeLocation, activeLocationId, invoicesWithContext, locations, quoteLocationLookup, quotesForCompany]);
 
-  const urgentActions = useMemo<UrgentAction[]>(() => {
-    const actions: UrgentAction[] = [];
-
-    if (overdueInvoices.length) {
-      const invoice = overdueInvoices[0].invoice;
-      actions.push({
-        id: 'overdue',
-        icon: AlertDiamondIcon,
-        tone: 'critical',
-        title: `${overdueInvoices.length} overdue invoice${overdueInvoices.length === 1 ? '' : 's'}`,
-        description: `Oldest due ${formatDate(invoice.dueAt)} • ${formatCurrency(overdueBalance)}`,
-        url: '/cx/invoices',
-      });
-    }
-
-    if (dueSoonInvoices.length && !actions.some((action) => action.id === 'overdue')) {
-      const invoice = dueSoonInvoices[0].invoice;
-      actions.push({
-        id: 'due-soon',
-        icon: CalendarIcon,
-        tone: 'attention',
-        title: 'Upcoming payment',
-        description: `Invoice ${invoice.invoiceNumber} due ${formatDate(invoice.dueAt)} (${formatTimeUntil(invoice.dueAt)})`,
-        url: `/cx/invoices/${invoice.id}`,
-      });
-    }
-
-    if (awaitingPaymentOrders.length) {
-      const order = awaitingPaymentOrders[0];
-      actions.push({
-        id: 'orders-awaiting-payment',
-        icon: CashDollarIcon,
-        tone: 'attention',
-        title: 'Orders waiting on payment',
-        description: `${awaitingPaymentOrders.length} order${awaitingPaymentOrders.length === 1 ? '' : 's'} like ${order.orderNumber}`,
-        url: '/cx/orders',
-      });
-    }
-
-    if (pendingQuotes.length) {
-      const quote = pendingQuotes[0];
-      actions.push({
-        id: 'approvals',
-        icon: ClipboardChecklistIcon,
-        tone: 'attention',
-        title: 'Quote approvals needed',
-        description: `${pendingQuotes.length} quote${pendingQuotes.length === 1 ? '' : 's'} in review (next: ${quote.quoteNumber})`,
-        url: '/cx/quotes',
-      });
-    }
-
-    if (!actions.length && deliveredOrders.length) {
-      const order = deliveredOrders[0];
-      actions.push({
-        id: 'delivered',
-        icon: DeliveryIcon,
-        tone: 'success',
-        title: 'Recent delivery completed',
-        description: `Order ${order.orderNumber} delivered • ${order.statusMeta}`,
-        url: '/cx/orders',
-      });
-    }
-
-    return actions.slice(0, 3);
-  }, [
-    awaitingPaymentOrders,
-    deliveredOrders,
-    dueSoonInvoices,
-    overdueBalance,
-    overdueInvoices,
-    pendingQuotes,
-  ]);
-
-  const locationBadgeText =
-    activeLocationId === ALL_LOCATIONS_ID
-      ? `All ${locations.length} locations`
-      : activeLocation?.name ?? 'Location filter';
-
-  const creditLimitAmount = company?.credit?.creditLimit?.amount ?? 0;
-  const creditUsedAmount = company?.credit?.creditUsed?.amount ?? 0;
-  const creditUsagePercent =
-    creditLimitAmount > 0 ? Math.min(100, Math.round((creditUsedAmount / creditLimitAmount) * 100)) : 0;
+  const draftQuotes = quotesForCompany.filter((quote) => quote.status === 'draft');
+  const approvedQuotes = quotesForCompany.filter((quote) => quote.status === 'approved');
 
   return (
-    <Page
-      title="Finance overview"
-      subtitle="Monitor receivables, fulfillment, and approval work in one place"
-      primaryAction={{ content: 'Record payment', url: '/cx/invoices' }}
-      secondaryActions={[{ content: 'Download AR snapshot', icon: NoteIcon, url: '/cx/history' }]}
-    >
-      <BlockStack gap="500">
+    <Page title="Account overview" subtitle="Snapshot of receivables, approvals, and fulfillment">
+      <BlockStack gap="400">
         <Card>
-          <BlockStack gap="200">
-            <InlineStack gap="200" blockAlign="center" wrap>
-              <Badge tone="info">{locationBadgeText}</Badge>
-              <Text tone="subdued" variant="bodySm">
-                {outstandingInvoices.length} active invoice{outstandingInvoices.length === 1 ? '' : 's'} ·{' '}
-                {filteredOrders.length} order{filteredOrders.length === 1 ? '' : 's'} ·{' '}
-                {pendingQuotes.length} pending approval{pendingQuotes.length === 1 ? '' : 's'}
-              </Text>
+          <BlockStack gap="300">
+            <InlineStack align="space-between" blockAlign="center" wrap>
+              <InlineStack gap="200" blockAlign="center" wrap>
+                <Icon source={CashDollarIcon} tone="subdued" />
+                <BlockStack gap="050">
+                  <Text as="h2" variant="headingLg">
+                    Financial health snapshot
+                  </Text>
+                  <InlineStack gap="150" blockAlign="center" wrap>
+                    <Badge tone={overdueInvoices.length ? 'critical' : 'success'}>
+                      {overdueInvoices.length} overdue invoices
+                    </Badge>
+                    <Badge tone={pendingQuotes.length ? 'attention' : 'success'}>
+                      {pendingQuotes.length} approvals
+                    </Badge>
+                    <Badge tone={awaitingPaymentOrders.length ? 'info' : 'success'}>
+                      {awaitingPaymentOrders.length} orders awaiting payment
+                    </Badge>
+                  </InlineStack>
+                </BlockStack>
+              </InlineStack>
+              <Button variant="tertiary" tone="subdued" onClick={() => navigate('/cx/history')}>
+                History
+              </Button>
             </InlineStack>
+            <Divider />
             <div className="KeyValueList">
               <div className="KeyValueList__Item">
                 <Text variant="headingLg">{formatCurrency(outstandingBalance)}</Text>
                 <Text tone="subdued" variant="bodySm">
-                  Receivables balance
+                  Outstanding receivables
                 </Text>
               </div>
               <div className="KeyValueList__Item">
-                <Text variant="headingLg">{overdueInvoices.length}</Text>
+                <Text variant="headingLg">{formatCurrency(overdueBalance)}</Text>
                 <Text tone="subdued" variant="bodySm">
-                  Overdue invoices · oldest due {overdueInvoices.length ? formatDate(overdueInvoices[0].invoice.dueAt) : '—'}
+                  Overdue balance
+                </Text>
+              </div>
+              <div className="KeyValueList__Item">
+                <Text variant="headingLg">{pendingQuotes.length}</Text>
+                <Text tone="subdued" variant="bodySm">
+                  Quotes pending approval
                 </Text>
               </div>
               <div className="KeyValueList__Item">
                 <Text variant="headingLg">{awaitingPaymentOrders.length}</Text>
                 <Text tone="subdued" variant="bodySm">
-                  Orders awaiting payment across filtered locations
+                  Orders awaiting payment
                 </Text>
               </div>
-              {creditLimitAmount ? (
-                <div className="KeyValueList__Item">
-                  <Text variant="headingLg">{formatCurrency(creditLimitAmount - creditUsedAmount)}</Text>
-                  <Text tone="subdued" variant="bodySm">
-                    Credit available
-                  </Text>
-                </div>
-              ) : null}
             </div>
           </BlockStack>
         </Card>
 
-        <Grid>
-          <Grid.Cell columnSpan={{ xs: 6, md: 6 }}>
-            <Card>
+        <Grid gap="300">
+          <Grid.Cell columnSpan={{ xs: 6, md: 4 }}>
+            <Card className="DashboardSnapshot">
               <BlockStack gap="200">
-                <InlineStack className="InlineSectionHeading" gap="100" blockAlign="center" wrap={false}>
-                  <Icon source={CashDollarIcon} tone="subdued" />
-                  <Text variant="headingSm">Receivables health</Text>
-                </InlineStack>
-                <Text tone="subdued" variant="bodySm">
-                  Keep tabs on upcoming payments and how credit capacity is being used.
-                </Text>
-                <BlockStack gap="150">
-                  <InlineStack align="space-between" blockAlign="center" wrap>
-                    <BlockStack gap="025">
-                      <Text fontWeight="medium">
-                        {nextPaymentDue
-                          ? `Invoice ${nextPaymentDue.invoiceNumber}`
-                          : 'No invoices due in the next week'}
-                      </Text>
-                      {nextPaymentDue ? (
-                        <Text tone="subdued" variant="bodySm">
-                          Due {formatDate(nextPaymentDue.dueAt)} · {formatCurrency(nextPaymentDue.balanceDue.amount)} remaining
-                        </Text>
-                      ) : (
-                        <Text tone="subdued" variant="bodySm">
-                          You’re clear for the next seven days.
-                        </Text>
-                      )}
-                    </BlockStack>
-                    {nextPaymentDue ? (
-                      <Badge tone="attention">{formatTimeUntil(nextPaymentDue.dueAt)}</Badge>
-                    ) : null}
+                <InlineStack align="space-between" blockAlign="center" wrap>
+                  <InlineStack gap="150" blockAlign="center">
+                    <Icon source={ClipboardChecklistIcon} tone="subdued" />
+                    <Text variant="headingSm">Quotes snapshot</Text>
                   </InlineStack>
-                  {creditLimitAmount ? (
-                    <BlockStack gap="050">
-                      <ProgressBar progress={creditUsagePercent} tone={creditUsagePercent > 80 ? 'critical' : 'highlight'} />
-                      <Text tone="subdued" variant="bodySm">
-                        {formatCurrency(creditUsedAmount)} of {formatCurrency(creditLimitAmount)} credit in use
-                      </Text>
-                    </BlockStack>
-                  ) : null}
-                </BlockStack>
-                <InlineStack gap="150" wrap>
-                  <Button variant="tertiary" size="slim" url="/cx/invoices">
-                    Review aging report
-                  </Button>
-                  <Button variant="tertiary" size="slim" url="/cx/company">
-                    Update payment terms
+                  <Button size="slim" onClick={() => navigate('/cx/quotes')}>
+                    View quotes
                   </Button>
                 </InlineStack>
+                <BlockStack gap="100">
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text tone="subdued" variant="bodySm">
+                      Pending approvals
+                    </Text>
+                    <Text variant="headingSm">{pendingQuotes.length}</Text>
+                  </InlineStack>
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text tone="subdued" variant="bodySm">
+                      Expiring this week
+                    </Text>
+                    <Text variant="headingSm">{expiringQuotes.length}</Text>
+                  </InlineStack>
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text tone="subdued" variant="bodySm">
+                      Drafts in progress
+                    </Text>
+                    <Text variant="headingSm">{draftQuotes.length}</Text>
+                  </InlineStack>
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text tone="subdued" variant="bodySm">
+                      Approved &amp; ready
+                    </Text>
+                    <Text variant="headingSm">{approvedQuotes.length}</Text>
+                  </InlineStack>
+                </BlockStack>
               </BlockStack>
             </Card>
           </Grid.Cell>
 
-          <Grid.Cell columnSpan={{ xs: 6, md: 6 }}>
-            <Card>
+          <Grid.Cell columnSpan={{ xs: 6, md: 4 }}>
+            <Card className="DashboardSnapshot">
               <BlockStack gap="200">
-                <InlineStack className="InlineSectionHeading" gap="100" blockAlign="center" wrap={false}>
-                  <Icon source={ClipboardChecklistIcon} tone="subdued" />
-                  <Text variant="headingSm">Workflow highlights</Text>
-                </InlineStack>
-                <Text tone="subdued" variant="bodySm">
-                  Surface where orders or approvals may need attention today.
-                </Text>
-                <div className="KeyValueList">
-                  <div className="KeyValueList__Item">
-                    <Badge tone={awaitingPaymentOrders.length ? 'attention' : 'success'}>
-                      Awaiting payment · {awaitingPaymentOrders.length}
-                    </Badge>
-                    <Text tone="subdued" variant="bodySm">
-                      Orders ready to settle
-                    </Text>
-                  </div>
-                  <div className="KeyValueList__Item">
-                    <Badge tone={ordersOutForDelivery.length ? 'info' : 'subdued'}>
-                      In transit · {ordersOutForDelivery.length}
-                    </Badge>
-                    <Text tone="subdued" variant="bodySm">
-                      Track delivery confirmations
-                    </Text>
-                  </div>
-                  <div className="KeyValueList__Item">
-                    <Badge tone={pendingQuotes.length ? 'attention' : 'success'}>
-                      Approvals · {pendingQuotes.length}
-                    </Badge>
-                    <Text tone="subdued" variant="bodySm">
-                      Quotes waiting for finance sign-off
-                    </Text>
-                  </div>
-                  <div className="KeyValueList__Item">
-                    <Badge tone={draftOrders.length ? 'subdued' : 'success'}>
-                      Drafts · {draftOrders.length}
-                    </Badge>
-                    <Text tone="subdued" variant="bodySm">
-                      Saved requisitions to review
-                    </Text>
-                  </div>
-                </div>
-                <InlineStack gap="150" wrap>
-                  <Button variant="tertiary" size="slim" url="/cx/orders">
-                    Open orders dashboard
-                  </Button>
-                  <Button variant="tertiary" size="slim" url="/cx/quotes">
-                    Manage approvals
+                <InlineStack align="space-between" blockAlign="center" wrap>
+                  <InlineStack gap="150" blockAlign="center">
+                    <Icon source={CashDollarIcon} tone="subdued" />
+                    <Text variant="headingSm">Invoices snapshot</Text>
+                  </InlineStack>
+                  <Button size="slim" onClick={() => navigate('/cx/invoices')}>
+                    View invoices
                   </Button>
                 </InlineStack>
+                <BlockStack gap="100">
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text tone="subdued" variant="bodySm">
+                      Outstanding balance
+                    </Text>
+                    <Text variant="headingSm">{formatCurrency(outstandingBalance)}</Text>
+                  </InlineStack>
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text tone="subdued" variant="bodySm">
+                      Overdue invoices
+                    </Text>
+                    <Text variant="headingSm">{overdueInvoices.length}</Text>
+                  </InlineStack>
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text tone="subdued" variant="bodySm">
+                      Drafts awaiting issue
+                    </Text>
+                    <Text variant="headingSm">
+                      {filteredInvoices.filter((invoice) => invoice.invoice.status === 'draft').length}
+                    </Text>
+                  </InlineStack>
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text tone="subdued" variant="bodySm">
+                      Next payment due
+                    </Text>
+                    <Text variant="headingSm">
+                      {nextPaymentDue ? formatDate(nextPaymentDue.dueAt) : '—'}
+                    </Text>
+                  </InlineStack>
+                </BlockStack>
+              </BlockStack>
+            </Card>
+          </Grid.Cell>
+
+          <Grid.Cell columnSpan={{ xs: 6, md: 4 }}>
+            <Card className="DashboardSnapshot">
+              <BlockStack gap="200">
+                <InlineStack align="space-between" blockAlign="center" wrap>
+                  <InlineStack gap="150" blockAlign="center">
+                    <Icon source={StoreIcon} tone="subdued" />
+                    <Text variant="headingSm">Orders snapshot</Text>
+                  </InlineStack>
+                  <Button size="slim" onClick={() => navigate('/cx/orders')}>
+                    View orders
+                  </Button>
+                </InlineStack>
+                <BlockStack gap="100">
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text tone="subdued" variant="bodySm">
+                      Awaiting payment
+                    </Text>
+                    <Text variant="headingSm">{awaitingPaymentOrders.length}</Text>
+                  </InlineStack>
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text tone="subdued" variant="bodySm">
+                      In transit
+                    </Text>
+                    <Text variant="headingSm">{ordersOutForDelivery.length}</Text>
+                  </InlineStack>
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text tone="subdued" variant="bodySm">
+                      Awaiting approval
+                    </Text>
+                    <Text variant="headingSm">{ordersAwaitingApproval.length}</Text>
+                  </InlineStack>
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text tone="subdued" variant="bodySm">
+                      Draft orders
+                    </Text>
+                    <Text variant="headingSm">{draftOrders.length}</Text>
+                  </InlineStack>
+                </BlockStack>
               </BlockStack>
             </Card>
           </Grid.Cell>
         </Grid>
 
-        <Grid>
+        <Grid gap="300">
           <Grid.Cell columnSpan={{ xs: 6, md: 7 }}>
-            <Card>
+            <Card className="DashboardSnapshot">
               <BlockStack gap="200">
-                <InlineStack className="InlineSectionHeading" gap="100" blockAlign="center" wrap={false}>
-                  <Icon source={AlertDiamondIcon} tone="subdued" />
-                  <Text variant="headingSm">Invoice watchlist</Text>
+                <InlineStack align="space-between" blockAlign="center" wrap>
+                  <InlineStack gap="150" blockAlign="center">
+                    <Icon source={AlertDiamondIcon} tone="subdued" />
+                    <Text variant="headingSm">Invoice watchlist</Text>
+                  </InlineStack>
+                  <Button size="slim" onClick={() => navigate('/cx/invoices')}>
+                    Resolve balance
+                  </Button>
                 </InlineStack>
                 {invoiceWatchlist.length ? (
                   <BlockStack gap="200">
@@ -520,8 +532,8 @@ export function DashboardPage() {
                               </Text>
                             </BlockStack>
                             <InlineStack gap="100" blockAlign="center">
-                              <Badge tone={insight.isOverdue ? 'critical' : insight.invoice.status === 'draft' ? 'attention' : 'info'}>
-                                {insight.isOverdue ? 'Overdue' : insight.invoice.status === 'draft' ? 'Draft' : 'High value'}
+                              <Badge tone={insight.isOverdue ? 'critical' : 'attention'}>
+                                {insight.isOverdue ? 'Overdue' : 'High value'}
                               </Badge>
                               {locationLabel ? <Badge tone="subdued">{locationLabel}</Badge> : null}
                             </InlineStack>
@@ -534,24 +546,23 @@ export function DashboardPage() {
                 ) : (
                   <Text tone="subdued">No invoices need special attention right now.</Text>
                 )}
-                <Button variant="tertiary" size="slim" url="/cx/invoices">
-                  View all invoices
-                </Button>
               </BlockStack>
             </Card>
           </Grid.Cell>
           <Grid.Cell columnSpan={{ xs: 6, md: 5 }}>
-            <Card>
+            <Card className="DashboardSnapshot">
               <BlockStack gap="200">
-                <InlineStack className="InlineSectionHeading" gap="100" blockAlign="center" wrap={false}>
-                  <Icon source={ClipboardChecklistIcon} tone="subdued" />
-                  <Text variant="headingSm">Next best actions</Text>
+                <InlineStack align="space-between" blockAlign="center" wrap>
+                  <InlineStack gap="150" blockAlign="center">
+                    <Icon source={ClipboardChecklistIcon} tone="subdued" />
+                    <Text variant="headingSm">Next best actions</Text>
+                  </InlineStack>
                 </InlineStack>
                 {urgentActions.length ? (
                   <BlockStack gap="200">
                     {urgentActions.map((action) => (
                       <BlockStack key={action.id} gap="100">
-                        <InlineStack className="InlineSectionHeading" gap="100" blockAlign="center" wrap={false}>
+                        <InlineStack gap="100" blockAlign="center">
                           <Icon source={action.icon} tone={action.tone} />
                           <Text fontWeight="medium">{action.title}</Text>
                         </InlineStack>
@@ -575,7 +586,7 @@ export function DashboardPage() {
 
         <Card>
           <BlockStack gap="300">
-            <InlineStack className="InlineSectionHeading" gap="100" blockAlign="center" wrap={false}>
+            <InlineStack gap="150" blockAlign="center" wrap>
               <Icon source={StoreIcon} tone="subdued" />
               <Text variant="headingSm">
                 {activeLocationId === ALL_LOCATIONS_ID ? 'Location spotlight' : activeLocation?.name ?? 'Location details'}
