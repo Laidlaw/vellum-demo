@@ -174,8 +174,7 @@ export function CustomerApp() {
   }, [invoicesNeedingAttention, ordersAwaitingAction, pendingApprovalQuotes]);
 
   const selectedTabIndex = useMemo(() => {
-    const index = navTabs.findIndex((tab) => tab.matches(normalizedPath));
-    return index >= 0 ? index : 0;
+    return navTabs.findIndex((tab) => tab.matches(normalizedPath));
   }, [navTabs, normalizedPath]);
 
   const tabs = useMemo(
@@ -301,7 +300,12 @@ export function CustomerApp() {
           />
         </div>
         <div className="CustomerAppHeaderTabs">
-          <Tabs tabs={tabs} selected={selectedTabIndex} onSelect={handleTabSelect} fitted />
+          <Tabs
+            tabs={tabs}
+            selected={selectedTabIndex >= 0 ? selectedTabIndex : -1}
+            onSelect={handleTabSelect}
+            fitted
+          />
         </div>
       </InlineStack>
       <InlineStack gap="150" blockAlign="center" wrap className="CustomerAppHeaderActions">

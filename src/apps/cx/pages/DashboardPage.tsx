@@ -17,8 +17,6 @@ import {
   CalendarIcon,
   CashDollarIcon,
   ClipboardChecklistIcon,
-  DeliveryIcon,
-  NoteIcon,
   StoreIcon,
 } from '@shopify/polaris-icons';
 
@@ -306,296 +304,347 @@ export function DashboardPage() {
   }, [activeLocation, activeLocationId, invoicesWithContext, locations, quoteLocationLookup, quotesForCompany]);
 
   const draftQuotes = quotesForCompany.filter((quote) => quote.status === 'draft');
-  const approvedQuotes = quotesForCompany.filter((quote) => quote.status === 'approved');
+  const dueSoonPreview = dueSoonInvoices.slice(0, 3);
+  const extraDueSoonCount = Math.max(0, dueSoonInvoices.length - dueSoonPreview.length);
+  const dueSoonBalance = dueSoonInvoices.reduce(
+    (sum, insight) => sum + insight.invoice.balanceDue.amount,
+    0,
+  );
+  const ordersBlockedCount = awaitingPaymentOrders.length + ordersAwaitingApproval.length;
+  const draftsInProgress = draftOrders.length + draftQuotes.length;
+  const locationFocusLabel =
+    activeLocationId === ALL_LOCATIONS_ID
+      ? 'All locations'
+      : activeLocation?.code ?? activeLocation?.name ?? 'Location';
+  const locationContextCopy =
+    activeLocationId === ALL_LOCATIONS_ID
+      ? `Monitoring ${locations.length} location${locations.length === 1 ? '' : 's'}`
+      : `Focused on ${activeLocation?.name ?? 'selected location'}`;
+  const locationSummariesPreview = locationSummaries.slice(0, 3);
+  const locationOverflowCount = Math.max(0, locationSummaries.length - locationSummariesPreview.length);
 
   return (
     <Page title="Account overview" subtitle="Snapshot of receivables, approvals, and fulfillment">
       <BlockStack gap="400">
         <Card>
           <BlockStack gap="300">
-            <InlineStack align="space-between" blockAlign="center" wrap>
-              <InlineStack gap="200" blockAlign="center" wrap>
-                <Icon source={CashDollarIcon} tone="subdued" />
-                <BlockStack gap="050">
+            <InlineStack align="space-between" blockAlign="start" wrap>
+              <BlockStack gap="100">
+                <InlineStack gap="150" blockAlign="center">
+                  <Icon source={CashDollarIcon} tone="subdued" />
                   <Text as="h2" variant="headingLg">
-                    Financial health snapshot
+                    Today at a glance
                   </Text>
-                  <InlineStack gap="150" blockAlign="center" wrap>
-                    <Badge tone={overdueInvoices.length ? 'critical' : 'success'}>
-                      {overdueInvoices.length} overdue invoices
-                    </Badge>
-                    <Badge tone={pendingQuotes.length ? 'attention' : 'success'}>
-                      {pendingQuotes.length} approvals
-                    </Badge>
-                    <Badge tone={awaitingPaymentOrders.length ? 'info' : 'success'}>
-                      {awaitingPaymentOrders.length} orders awaiting payment
-                    </Badge>
-                  </InlineStack>
-                </BlockStack>
+                </InlineStack>
+                <InlineStack gap="100" blockAlign="center" wrap>
+                  <Badge tone="subdued">{locationFocusLabel}</Badge>
+                  <Text tone="subdued" variant="bodySm">
+                    {locationContextCopy}
+                  </Text>
+                </InlineStack>
+              </BlockStack>
+              <InlineStack gap="100" wrap>
+                <Button variant="primary" onClick={() => navigate('/cx/invoices')}>
+                  Collect payments
+                </Button>
+                <Button variant="tertiary" onClick={() => navigate('/cx/history')}>
+                  Account history
+                </Button>
               </InlineStack>
-              <Button variant="tertiary" tone="subdued" onClick={() => navigate('/cx/history')}>
-                History
-              </Button>
             </InlineStack>
-            <Divider />
-            <div className="KeyValueList">
+            <div className="KeyValueList MiniStatList">
               <div className="KeyValueList__Item">
-                <Text variant="headingLg">{formatCurrency(outstandingBalance)}</Text>
                 <Text tone="subdued" variant="bodySm">
                   Outstanding receivables
                 </Text>
+                <Text variant="headingLg">{formatCurrency(outstandingBalance)}</Text>
               </div>
               <div className="KeyValueList__Item">
-                <Text variant="headingLg">{formatCurrency(overdueBalance)}</Text>
                 <Text tone="subdued" variant="bodySm">
                   Overdue balance
                 </Text>
+                <Text variant="headingLg">{formatCurrency(overdueBalance)}</Text>
               </div>
               <div className="KeyValueList__Item">
-                <Text variant="headingLg">{pendingQuotes.length}</Text>
                 <Text tone="subdued" variant="bodySm">
-                  Quotes pending approval
+                  Due within 7 days
+                </Text>
+                <Text variant="headingLg">{formatCurrency(dueSoonBalance)}</Text>
+                <Text tone="subdued" variant="bodySm">
+                  {dueSoonInvoices.length
+                    ? `${dueSoonInvoices.length} invoice${dueSoonInvoices.length === 1 ? '' : 's'} scheduled`
+                    : 'No payments scheduled'}
                 </Text>
               </div>
               <div className="KeyValueList__Item">
-                <Text variant="headingLg">{awaitingPaymentOrders.length}</Text>
                 <Text tone="subdued" variant="bodySm">
-                  Orders awaiting payment
+                  Quotes awaiting approval
+                </Text>
+                <Text variant="headingLg">{pendingQuotes.length}</Text>
+                <Text tone="subdued" variant="bodySm">
+                  {expiringQuotes.length
+                    ? `${expiringQuotes.length} expiring within a week`
+                    : 'All approvals on track'}
+                </Text>
+              </div>
+              <div className="KeyValueList__Item">
+                <Text tone="subdued" variant="bodySm">
+                  Orders blocked
+                </Text>
+                <Text variant="headingLg">{ordersBlockedCount}</Text>
+                <Text tone="subdued" variant="bodySm">
+                  {awaitingPaymentOrders.length} awaiting payment · {ordersAwaitingApproval.length} awaiting approval
                 </Text>
               </div>
             </div>
+            <InlineStack gap="100" wrap>
+              <Button size="slim" variant="tertiary" onClick={() => navigate('/cx/invoices')}>
+                View invoices
+              </Button>
+              <Button size="slim" variant="tertiary" onClick={() => navigate('/cx/quotes')}>
+                Review approvals
+              </Button>
+              <Button size="slim" variant="tertiary" onClick={() => navigate('/cx/orders')}>
+                Track fulfillment
+              </Button>
+            </InlineStack>
           </BlockStack>
         </Card>
 
-        <Grid gap="300">
+        <div className="DashboardGridFlush">
+          <Grid gap="300">
           <Grid.Cell columnSpan={{ xs: 6, md: 4 }}>
-            <Card className="DashboardSnapshot">
-              <BlockStack gap="200">
-                <InlineStack align="space-between" blockAlign="center" wrap>
-                  <InlineStack gap="150" blockAlign="center">
-                    <Icon source={ClipboardChecklistIcon} tone="subdued" />
-                    <Text variant="headingSm">Quotes snapshot</Text>
-                  </InlineStack>
-                  <Button size="slim" onClick={() => navigate('/cx/quotes')}>
-                    View quotes
-                  </Button>
-                </InlineStack>
-                <BlockStack gap="100">
-                  <InlineStack align="space-between" blockAlign="center">
-                    <Text tone="subdued" variant="bodySm">
-                      Pending approvals
-                    </Text>
-                    <Text variant="headingSm">{pendingQuotes.length}</Text>
-                  </InlineStack>
-                  <InlineStack align="space-between" blockAlign="center">
-                    <Text tone="subdued" variant="bodySm">
-                      Expiring this week
-                    </Text>
-                    <Text variant="headingSm">{expiringQuotes.length}</Text>
-                  </InlineStack>
-                  <InlineStack align="space-between" blockAlign="center">
-                    <Text tone="subdued" variant="bodySm">
-                      Drafts in progress
-                    </Text>
-                    <Text variant="headingSm">{draftQuotes.length}</Text>
-                  </InlineStack>
-                  <InlineStack align="space-between" blockAlign="center">
-                    <Text tone="subdued" variant="bodySm">
-                      Approved &amp; ready
-                    </Text>
-                    <Text variant="headingSm">{approvedQuotes.length}</Text>
-                  </InlineStack>
-                </BlockStack>
-              </BlockStack>
-            </Card>
-          </Grid.Cell>
-
-          <Grid.Cell columnSpan={{ xs: 6, md: 4 }}>
-            <Card className="DashboardSnapshot">
-              <BlockStack gap="200">
-                <InlineStack align="space-between" blockAlign="center" wrap>
-                  <InlineStack gap="150" blockAlign="center">
-                    <Icon source={CashDollarIcon} tone="subdued" />
-                    <Text variant="headingSm">Invoices snapshot</Text>
-                  </InlineStack>
-                  <Button size="slim" onClick={() => navigate('/cx/invoices')}>
-                    View invoices
-                  </Button>
-                </InlineStack>
-                <BlockStack gap="100">
-                  <InlineStack align="space-between" blockAlign="center">
-                    <Text tone="subdued" variant="bodySm">
-                      Outstanding balance
-                    </Text>
-                    <Text variant="headingSm">{formatCurrency(outstandingBalance)}</Text>
-                  </InlineStack>
-                  <InlineStack align="space-between" blockAlign="center">
-                    <Text tone="subdued" variant="bodySm">
-                      Overdue invoices
-                    </Text>
-                    <Text variant="headingSm">{overdueInvoices.length}</Text>
-                  </InlineStack>
-                  <InlineStack align="space-between" blockAlign="center">
-                    <Text tone="subdued" variant="bodySm">
-                      Drafts awaiting issue
-                    </Text>
-                    <Text variant="headingSm">
-                      {filteredInvoices.filter((invoice) => invoice.invoice.status === 'draft').length}
-                    </Text>
-                  </InlineStack>
-                  <InlineStack align="space-between" blockAlign="center">
-                    <Text tone="subdued" variant="bodySm">
-                      Next payment due
-                    </Text>
-                    <Text variant="headingSm">
-                      {nextPaymentDue ? formatDate(nextPaymentDue.dueAt) : '—'}
-                    </Text>
-                  </InlineStack>
-                </BlockStack>
-              </BlockStack>
-            </Card>
-          </Grid.Cell>
-
-          <Grid.Cell columnSpan={{ xs: 6, md: 4 }}>
-            <Card className="DashboardSnapshot">
-              <BlockStack gap="200">
-                <InlineStack align="space-between" blockAlign="center" wrap>
-                  <InlineStack gap="150" blockAlign="center">
-                    <Icon source={StoreIcon} tone="subdued" />
-                    <Text variant="headingSm">Orders snapshot</Text>
-                  </InlineStack>
-                  <Button size="slim" onClick={() => navigate('/cx/orders')}>
-                    View orders
-                  </Button>
-                </InlineStack>
-                <BlockStack gap="100">
-                  <InlineStack align="space-between" blockAlign="center">
-                    <Text tone="subdued" variant="bodySm">
-                      Awaiting payment
-                    </Text>
-                    <Text variant="headingSm">{awaitingPaymentOrders.length}</Text>
-                  </InlineStack>
-                  <InlineStack align="space-between" blockAlign="center">
-                    <Text tone="subdued" variant="bodySm">
-                      In transit
-                    </Text>
-                    <Text variant="headingSm">{ordersOutForDelivery.length}</Text>
-                  </InlineStack>
-                  <InlineStack align="space-between" blockAlign="center">
-                    <Text tone="subdued" variant="bodySm">
-                      Awaiting approval
-                    </Text>
-                    <Text variant="headingSm">{ordersAwaitingApproval.length}</Text>
-                  </InlineStack>
-                  <InlineStack align="space-between" blockAlign="center">
-                    <Text tone="subdued" variant="bodySm">
-                      Draft orders
-                    </Text>
-                    <Text variant="headingSm">{draftOrders.length}</Text>
-                  </InlineStack>
-                </BlockStack>
-              </BlockStack>
-            </Card>
-          </Grid.Cell>
-        </Grid>
-
-        <Grid gap="300">
-          <Grid.Cell columnSpan={{ xs: 6, md: 7 }}>
-            <Card className="DashboardSnapshot">
+            <Card>
               <BlockStack gap="200">
                 <InlineStack align="space-between" blockAlign="center" wrap>
                   <InlineStack gap="150" blockAlign="center">
                     <Icon source={AlertDiamondIcon} tone="subdued" />
-                    <Text variant="headingSm">Invoice watchlist</Text>
+                    <Text variant="headingSm">Needs attention</Text>
                   </InlineStack>
-                  <Button size="slim" onClick={() => navigate('/cx/invoices')}>
-                    Resolve balance
-                  </Button>
-                </InlineStack>
-                {invoiceWatchlist.length ? (
-                  <BlockStack gap="200">
-                    {invoiceWatchlist.map((insight) => {
-                      const locationLabel =
-                        insight.locationId && activeLocationId === ALL_LOCATIONS_ID
-                          ? locations.find((location) => location.id === insight.locationId)?.code ??
-                            locations.find((location) => location.id === insight.locationId)?.name ??
-                            'Location'
-                          : undefined;
-
-                      return (
-                        <BlockStack key={insight.invoice.id} gap="100">
-                          <InlineStack align="space-between" blockAlign="center" wrap>
-                            <BlockStack gap="025">
-                              <Text fontWeight="medium">{insight.invoice.invoiceNumber}</Text>
-                              <Text tone="subdued" variant="bodySm">
-                                {formatCurrency(insight.invoice.balanceDue.amount)} · Due {formatDate(insight.invoice.dueAt)} ({formatTimeUntil(insight.invoice.dueAt)})
-                              </Text>
-                            </BlockStack>
-                            <InlineStack gap="100" blockAlign="center">
-                              <Badge tone={insight.isOverdue ? 'critical' : 'attention'}>
-                                {insight.isOverdue ? 'Overdue' : 'High value'}
-                              </Badge>
-                              {locationLabel ? <Badge tone="subdued">{locationLabel}</Badge> : null}
-                            </InlineStack>
-                          </InlineStack>
-                          <Divider />
-                        </BlockStack>
-                      );
-                    })}
-                  </BlockStack>
-                ) : (
-                  <Text tone="subdued">No invoices need special attention right now.</Text>
-                )}
-              </BlockStack>
-            </Card>
-          </Grid.Cell>
-          <Grid.Cell columnSpan={{ xs: 6, md: 5 }}>
-            <Card className="DashboardSnapshot">
-              <BlockStack gap="200">
-                <InlineStack align="space-between" blockAlign="center" wrap>
-                  <InlineStack gap="150" blockAlign="center">
-                    <Icon source={ClipboardChecklistIcon} tone="subdued" />
-                    <Text variant="headingSm">Next best actions</Text>
-                  </InlineStack>
+                  <Badge tone={urgentActions.length ? 'critical' : 'success'}>
+                    {urgentActions.length ? `${urgentActions.length} open` : 'Clear'}
+                  </Badge>
                 </InlineStack>
                 {urgentActions.length ? (
-                  <BlockStack gap="200">
-                    {urgentActions.map((action) => (
+                  <BlockStack gap="150">
+                    {urgentActions.map((action, index) => (
                       <BlockStack key={action.id} gap="100">
-                        <InlineStack gap="100" blockAlign="center">
-                          <Icon source={action.icon} tone={action.tone} />
-                          <Text fontWeight="medium">{action.title}</Text>
+                        <InlineStack align="space-between" blockAlign="start" wrap>
+                          <InlineStack gap="150" blockAlign="center">
+                            <Icon source={action.icon} tone={action.tone} />
+                            <BlockStack gap="050">
+                              <Text fontWeight="medium">{action.title}</Text>
+                              <Text tone="subdued" variant="bodySm">
+                                {action.description}
+                              </Text>
+                            </BlockStack>
+                          </InlineStack>
+                          <Button variant="tertiary" size="slim" onClick={() => navigate(action.url)}>
+                            Go
+                          </Button>
                         </InlineStack>
-                        <Text tone="subdued" variant="bodySm">
-                          {action.description}
-                        </Text>
-                        <Button variant="tertiary" size="slim" url={action.url}>
-                          Open
-                        </Button>
-                        <Divider />
+                        {index < urgentActions.length - 1 ? <Divider /> : null}
                       </BlockStack>
                     ))}
                   </BlockStack>
                 ) : (
-                  <Text tone="subdued">Everything looks good. Keep an eye on upcoming invoices later this week.</Text>
+                  <Text tone="subdued">No blockers right now. Check back after the next billing cycle.</Text>
                 )}
+                {invoiceWatchlist.length ? (
+                  <>
+                    <Divider />
+                    <BlockStack gap="150">
+                      <InlineStack align="space-between" blockAlign="center" wrap>
+                        <Text variant="headingSm">Invoices at risk</Text>
+                        <Badge tone="critical">{invoiceWatchlist.length}</Badge>
+                      </InlineStack>
+                      <BlockStack gap="150">
+                        {invoiceWatchlist.map((insight, index) => {
+                          const locationLabel =
+                            insight.locationId && activeLocationId === ALL_LOCATIONS_ID
+                              ? locations.find((location) => location.id === insight.locationId)?.code ??
+                                locations.find((location) => location.id === insight.locationId)?.name ??
+                                'Location'
+                              : undefined;
+
+                          return (
+                            <BlockStack key={insight.invoice.id} gap="075">
+                              <InlineStack align="space-between" blockAlign="center" wrap>
+                                <BlockStack gap="025">
+                                  <Text fontWeight="medium">{insight.invoice.invoiceNumber}</Text>
+                                  <Text tone="subdued" variant="bodySm">
+                                    {formatCurrency(insight.invoice.balanceDue.amount)} · Due {formatDate(insight.invoice.dueAt)} (
+                                    {formatTimeUntil(insight.invoice.dueAt)})
+                                  </Text>
+                                </BlockStack>
+                                <InlineStack gap="100" blockAlign="center">
+                                  <Badge tone={insight.isOverdue ? 'critical' : 'attention'}>
+                                    {insight.isOverdue ? 'Overdue' : 'High value'}
+                                  </Badge>
+                                  {locationLabel ? <Badge tone="subdued">{locationLabel}</Badge> : null}
+                                </InlineStack>
+                              </InlineStack>
+                              {index < invoiceWatchlist.length - 1 ? <Divider /> : null}
+                            </BlockStack>
+                          );
+                        })}
+                      </BlockStack>
+                      <InlineStack gap="100" wrap>
+                        <Button variant="secondary" size="slim" onClick={() => navigate('/cx/invoices')}>
+                          Resolve balances
+                        </Button>
+                      </InlineStack>
+                    </BlockStack>
+                  </>
+                ) : null}
               </BlockStack>
             </Card>
           </Grid.Cell>
-        </Grid>
+          <Grid.Cell columnSpan={{ xs: 6, md: 4 }}>
+            <Card>
+              <BlockStack gap="200">
+                <InlineStack align="space-between" blockAlign="center" wrap>
+                  <InlineStack gap="150" blockAlign="center">
+                    <Icon source={CalendarIcon} tone="subdued" />
+                    <Text variant="headingSm">Cash this week</Text>
+                  </InlineStack>
+                  <Badge tone={dueSoonInvoices.length ? 'attention' : 'success'}>
+                    {dueSoonInvoices.length ? `${dueSoonInvoices.length} due` : 'No payments'}
+                  </Badge>
+                </InlineStack>
+                <BlockStack gap="050">
+                  <Text variant="headingMd">{formatCurrency(dueSoonBalance)}</Text>
+                  <Text tone="subdued" variant="bodySm">
+                    Due within 7 days
+                  </Text>
+                </BlockStack>
+                {nextPaymentDue ? (
+                  <BlockStack gap="025">
+                    <Text tone="subdued" variant="bodySm">
+                      Next payment
+                    </Text>
+                    <Text fontWeight="medium">
+                      {nextPaymentDue.invoiceNumber ?? nextPaymentDue.id} · Due {formatDate(nextPaymentDue.dueAt)}
+                    </Text>
+                  </BlockStack>
+                ) : null}
+                {dueSoonPreview.length ? (
+                  <BlockStack gap="150">
+                    {dueSoonPreview.map((insight) => {
+                      const dueLabel =
+                        insight.daysUntilDue === 0
+                          ? 'Due today'
+                          : `${insight.daysUntilDue} day${insight.daysUntilDue === 1 ? '' : 's'}`;
+                      const tone = insight.daysUntilDue === 0 ? 'critical' : 'attention';
+
+                      return (
+                        <InlineStack key={insight.invoice.id} align="space-between" blockAlign="center" wrap>
+                          <BlockStack gap="025">
+                            <Text fontWeight="medium">{insight.invoice.invoiceNumber}</Text>
+                            <Text tone="subdued" variant="bodySm">
+                              {formatCurrency(insight.invoice.balanceDue.amount)} · Due {formatDate(insight.invoice.dueAt)}
+                            </Text>
+                          </BlockStack>
+                          <InlineStack gap="100" blockAlign="center">
+                            <Badge tone={tone}>{dueLabel}</Badge>
+                            <Button size="slim" variant="tertiary" onClick={() => navigate('/cx/invoices')}>
+                              Collect
+                            </Button>
+                          </InlineStack>
+                        </InlineStack>
+                      );
+                    })}
+                  </BlockStack>
+                ) : (
+                  <Text tone="subdued">Nothing scheduled for the next week.</Text>
+                )}
+                {extraDueSoonCount > 0 ? (
+                  <Text tone="subdued" variant="bodySm">
+                    +{extraDueSoonCount} more invoice{extraDueSoonCount === 1 ? '' : 's'} due within 7 days
+                  </Text>
+                ) : null}
+                <Button variant="secondary" size="slim" onClick={() => navigate('/cx/invoices')}>
+                  View aging schedule
+                </Button>
+              </BlockStack>
+            </Card>
+          </Grid.Cell>
+          <Grid.Cell columnSpan={{ xs: 6, md: 4 }}>
+            <Card>
+              <BlockStack gap="250">
+                <InlineStack align="space-between" blockAlign="center" wrap>
+                  <InlineStack gap="150" blockAlign="center">
+                    <Icon source={ClipboardChecklistIcon} tone="subdued" />
+                    <Text variant="headingSm">Work queues</Text>
+                  </InlineStack>
+                  <Text tone="subdued" variant="bodySm">
+                    Keep approvals, collections, and drafts moving.
+                  </Text>
+                </InlineStack>
+                <div className="WorkstreamGrid">
+                  <div className="WorkstreamGrid__Cell">
+                    <Text tone="subdued" variant="bodySm">
+                      Quotes awaiting approval
+                    </Text>
+                    <Text variant="headingLg">{pendingQuotes.length}</Text>
+                    <Text tone="subdued" variant="bodySm">
+                      {expiringQuotes.length
+                        ? `${expiringQuotes.length} expiring within a week`
+                        : 'No expirations this week'}
+                    </Text>
+                    <Button size="slim" onClick={() => navigate('/cx/quotes')}>
+                      Review quotes
+                    </Button>
+                  </div>
+                  <div className="WorkstreamGrid__Cell">
+                    <Text tone="subdued" variant="bodySm">
+                      Orders needing action
+                    </Text>
+                    <Text variant="headingLg">{ordersBlockedCount}</Text>
+                    <Text tone="subdued" variant="bodySm">
+                      {awaitingPaymentOrders.length} awaiting payment · {ordersAwaitingApproval.length} awaiting approval
+                    </Text>
+                    <Button size="slim" onClick={() => navigate('/cx/orders')}>
+                      Open orders board
+                    </Button>
+                  </div>
+                  <div className="WorkstreamGrid__Cell">
+                    <Text tone="subdued" variant="bodySm">
+                      Drafts in progress
+                    </Text>
+                    <Text variant="headingLg">{draftsInProgress}</Text>
+                    <Text tone="subdued" variant="bodySm">
+                      {draftOrders.length} order{draftOrders.length === 1 ? '' : 's'} · {draftQuotes.length} quote
+                      {draftQuotes.length === 1 ? '' : 's'}
+                    </Text>
+                    <Button size="slim" onClick={() => navigate('/cx/quotes')}>
+                      Finish drafts
+                    </Button>
+                  </div>
+                </div>
+              </BlockStack>
+            </Card>
+          </Grid.Cell>
+          </Grid>
+        </div>
 
         <Card>
-          <BlockStack gap="300">
-            <InlineStack gap="150" blockAlign="center" wrap>
-              <Icon source={StoreIcon} tone="subdued" />
-              <Text variant="headingSm">
-                {activeLocationId === ALL_LOCATIONS_ID ? 'Location spotlight' : activeLocation?.name ?? 'Location details'}
-              </Text>
+          <BlockStack gap="250">
+            <InlineStack align="space-between" blockAlign="center" wrap>
+              <InlineStack gap="150" blockAlign="center">
+                <Icon source={StoreIcon} tone="subdued" />
+                <Text variant="headingSm">
+                  {activeLocationId === ALL_LOCATIONS_ID ? 'Location health' : activeLocation?.name ?? 'Location details'}
+                </Text>
+              </InlineStack>
+              <Badge tone="subdued">
+                {locationSummaries.length} location{locationSummaries.length === 1 ? '' : 's'}
+              </Badge>
             </InlineStack>
-            {locationSummaries.length ? (
-              <BlockStack gap="300">
-                {locationSummaries.map((summary) => (
-                  <BlockStack key={summary.location.id} gap="200">
+            {locationSummariesPreview.length ? (
+              <BlockStack gap="200">
+                {locationSummariesPreview.map((summary, index) => (
+                  <BlockStack key={summary.location.id} gap="150">
                     <InlineStack align="space-between" blockAlign="center" wrap>
                       <InlineStack gap="150" blockAlign="center" wrap>
                         <BlockStack gap="025">
@@ -627,7 +676,7 @@ export function DashboardPage() {
                         </InlineStack>
                       </BlockStack>
                     </InlineStack>
-                    <Divider />
+                    {index < locationSummariesPreview.length - 1 ? <Divider /> : null}
                   </BlockStack>
                 ))}
               </BlockStack>
@@ -636,6 +685,11 @@ export function DashboardPage() {
                 No locations match this filter yet. Add shipping locations from the Locations page to see site-level insights.
               </Text>
             )}
+            {locationOverflowCount > 0 ? (
+              <Text tone="subdued" variant="bodySm">
+                +{locationOverflowCount} more location{locationOverflowCount === 1 ? '' : 's'} in this view
+              </Text>
+            ) : null}
             <InlineStack gap="150" wrap>
               <Button variant="tertiary" size="slim" url="/cx/company">
                 View billing profile

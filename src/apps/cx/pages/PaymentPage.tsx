@@ -10,15 +10,14 @@ import {
   ChoiceList,
   Collapsible,
   Divider,
+  Grid,
   Icon,
   InlineStack,
-  Layout,
   Page,
   Text,
   TextField,
 } from '@shopify/polaris';
 import {
-  CartIcon,
   BankIcon,
   CalendarIcon,
   MoneyIcon,
@@ -28,11 +27,7 @@ import {
 } from '@shopify/polaris-icons';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import {
-  getCompanyById,
-  getInvoiceById,
-  getQuoteById,
-} from '../../../data';
+import { getCompanyById, getInvoiceById, getQuoteById } from '../../../data';
 import { formatCurrency, formatDate, formatTimeUntil } from '../../../utils/formatters';
 
 interface PaymentMethodConfig {
@@ -51,7 +46,7 @@ interface PaymentMethodCardProps {
 
 function PaymentMethodCard({ config, isActive, onToggle, children }: PaymentMethodCardProps) {
   return (
-    <Card>
+    <Card className="PaymentMethodCard">
       <Box
         paddingInline="500"
         paddingBlock="400"
@@ -119,6 +114,12 @@ const PAYMENT_METHODS: PaymentMethodConfig[] = [
   },
 ];
 
+const SHIPPING_CHOICES = [
+  { label: 'Standard delivery (3-5 business days)', value: 'standard' },
+  { label: 'Expedited delivery (1-2 business days)', value: 'expedited' },
+  { label: 'Warehouse pickup', value: 'pickup' },
+];
+
 export function PaymentPage() {
   const { invoiceId } = useParams<{ invoiceId: string }>();
   const navigate = useNavigate();
@@ -138,7 +139,7 @@ export function PaymentPage() {
   const [achAccepted, setAchAccepted] = useState(false);
   const [shopPayEmail, setShopPayEmail] = useState(company?.contacts[0]?.email ?? '');
   const [confirmation, setConfirmation] = useState<string | null>(null);
-  const [shippingOption, setShippingOption] = useState<'standard' | 'expedited' | 'pickup'>('standard');
+  const [shippingOption, setShippingOption] = useState<typeof SHIPPING_CHOICES[number]['value']>('standard');
 
   if (!invoice) {
     return (
@@ -163,6 +164,7 @@ export function PaymentPage() {
 
   const totalDue = invoice.balanceDue.amount;
   const installmentOptions = company?.paymentTerms.installmentOptions ?? [];
+  const statusTone = invoice.status === 'overdue' ? 'critical' : invoice.status === 'paid' ? 'success' : 'info';
 
   useEffect(() => {
     if (installmentOptions.length > 0 && !installmentOptions.some((option) => option.id === installmentPlan)) {
@@ -241,13 +243,10 @@ export function PaymentPage() {
                     </BlockStack>
                   );
                 })()}
-                <Text tone="subdued" variant="bodySm">
-                  Funds will be debited automatically each month on the invoice due date.
-                </Text>
               </BlockStack>
             ) : (
               <Text tone="subdued" variant="bodySm">
-                Your company does not have installment plans enabled. Contact your merchant to enable Shopify Capital.
+                Installment plans are not enabled for this customer.
               </Text>
             )}
           </BlockStack>
@@ -256,26 +255,23 @@ export function PaymentPage() {
         return (
           <BlockStack gap="200">
             <Text variant="bodyMd">
-              Authorize a one-time ACH debit from your business account. Provide your treasury contact for receipts.
+              Authorize an ACH debit from your preferred business account.
             </Text>
-            <TextField
-              label="Treasury contact email"
-              value={shopPayEmail}
-              onChange={setShopPayEmail}
-              autoComplete="email"
-            />
             <Checkbox
-              label="I authorize a debit for the amount due from our primary business account"
+              label="I certify that I’m an authorized signer on this account"
               checked={achAccepted}
-              onChange={setAchAccepted}
+              onChange={(value) => setAchAccepted(value)}
             />
+            <Text tone="subdued" variant="bodySm">
+              Funds will be debited within one business day of scheduling the payment.
+            </Text>
           </BlockStack>
         );
       case 'shopPay':
         return (
           <BlockStack gap="200">
             <Text variant="bodyMd">
-              Complete payment with Shop Pay using your stored details. A confirmation will be sent upon completion.
+              Use your saved Shop Pay profile for faster checkout.
             </Text>
             <TextField
               label="Shop Pay email"
@@ -284,7 +280,7 @@ export function PaymentPage() {
               autoComplete="email"
             />
             <Text tone="subdued" variant="bodySm">
-              Shop Pay supports cards ending in •••• 4567 and •••• 8901 for this organization.
+              We’ll send a confirmation to this email address.
             </Text>
           </BlockStack>
         );
@@ -293,161 +289,188 @@ export function PaymentPage() {
     }
   };
 
-  const confirmDisabled =
-    (activeMethod === 'invoice' && poNumber.trim().length === 0) ||
-    (activeMethod === 'ach' && !achAccepted) ||
-    (activeMethod === 'installments' && installmentOptions.length === 0) ||
-    (activeMethod === 'shopPay' && shopPayEmail.trim().length === 0);
-
   return (
     <Page
-      title="Complete payment"
-      subtitle={`Invoice ${invoice.invoiceNumber}`}
-      backAction={{
-        content: 'Invoice details',
-        onAction: () => navigate(`/cx/invoices/${invoice.id}`),
-      }}
-      primaryAction={{ content: 'Confirm payment', onAction: handleConfirm, disabled: confirmDisabled }}
-      secondaryActions={[{ content: 'Download invoice', icon: NoteIcon }]}
+      title={`Pay invoice ${invoice.invoiceNumber}`}
+      subtitle={`${company?.name ?? 'Buyer account'} · ${formatCurrency(totalDue)} due ${formatDate(invoice.dueAt)}`}
+      backAction={{ content: 'Back to invoice', onAction: () => navigate(`/cx/invoices/${invoice.id}`) }}
     >
       <BlockStack gap="400">
         {confirmation ? (
-          <Banner title="Payment scheduled" tone="success" onDismiss={() => setConfirmation(null)}>
+          <Banner tone="success" title="Payment scheduled">
             <p>{confirmation}</p>
           </Banner>
         ) : null}
 
-        <Layout>
-          <Layout.Section>
-            <Card>
-              <InlineStack
-                wrap
-                align="space-between"
-                blockAlign="start"
-                gap="500"
-              >
-                <Box minWidth="220px">
-                  <BlockStack gap="100">
-                    <Text tone="subdued" variant="bodySm">
-                      Company
-                    </Text>
-                    <Text variant="bodyMd" fontWeight="medium">
-                      {company?.name}
-                    </Text>
-                    <Text tone="subdued" variant="bodySm">
-                      Credit available:{' '}
-                      {company?.credit.availableCredit
-                        ? formatCurrency(company.credit.availableCredit.amount)
-                        : '—'}
-                    </Text>
-                  </BlockStack>
-                </Box>
-                <Box minWidth="220px">
-                  <BlockStack gap="100">
-                    <Text tone="subdued" variant="bodySm">
-                      Invoice due
-                    </Text>
-                    <InlineStack gap="150" blockAlign="center">
-                      <Icon source={CalendarIcon} tone="subdued" />
-                      <Text variant="bodyMd">{formatDate(invoice.dueAt)}</Text>
-                    </InlineStack>
-                    <Text tone="subdued" variant="bodySm">
-                      {formatTimeUntil(invoice.dueAt)}
-                    </Text>
-                  </BlockStack>
-                </Box>
-                <Box minWidth="220px">
-                  <BlockStack gap="100">
-                    <Text tone="subdued" variant="bodySm">
-                      Quote reference
-                    </Text>
-                    <Text variant="bodyMd">{quote?.quoteNumber ?? invoice.quoteId ?? '—'}</Text>
-                    <Text tone="subdued" variant="bodySm">
-                      Amount due: {formatCurrency(totalDue)}
-                    </Text>
-                  </BlockStack>
-                </Box>
+        <Card>
+          <BlockStack gap="300">
+            <InlineStack align="space-between" blockAlign="start" wrap>
+              <BlockStack gap="050">
+                <InlineStack gap="100" blockAlign="center" wrap>
+                  <Badge tone={statusTone}>{invoice.status}</Badge>
+                  <Text tone="subdued" variant="bodySm">
+                    Balance due · {formatCurrency(totalDue)}
+                  </Text>
+                </InlineStack>
+                <Text variant="headingLg">{formatCurrency(totalDue)}</Text>
+                <Text tone="subdued" variant="bodySm">
+                  Due {formatDate(invoice.dueAt)} ({formatTimeUntil(invoice.dueAt)})
+                </Text>
+              </BlockStack>
+              <InlineStack gap="150" blockAlign="center" wrap>
+                {quote ? (
+                  <Button variant="tertiary" onClick={() => navigate(`/cx/quotes/${quote.id}`)}>
+                    View linked quote
+                  </Button>
+                ) : null}
+                <Button variant="tertiary" onClick={() => navigate(`/cx/invoices/${invoice.id}`)}>
+                  Download invoice
+                </Button>
               </InlineStack>
+            </InlineStack>
+            <Divider />
+            <div className="QuoteDetailSummaryGrid">
+              <div className="QuoteDetailSummaryCell">
+                <Text tone="subdued" variant="bodySm">
+                  Billing company
+                </Text>
+                <BlockStack gap="050">
+                  <Text variant="bodyMd" fontWeight="medium">
+                    {company?.name ?? 'Company account'}
+                  </Text>
+                  <Text tone="subdued" variant="bodySm">
+                    {company?.legalName ?? '—'}
+                  </Text>
+                </BlockStack>
+              </div>
+              <div className="QuoteDetailSummaryCell">
+                <Text tone="subdued" variant="bodySm">
+                  Billing contact
+                </Text>
+                <BlockStack gap="050">
+                  <Text variant="bodyMd">
+                    {company?.contacts[0]?.firstName} {company?.contacts[0]?.lastName}
+                  </Text>
+                  <Text tone="subdued" variant="bodySm">
+                    {company?.contacts[0]?.email}
+                  </Text>
+                </BlockStack>
+              </div>
+              <div className="QuoteDetailSummaryCell">
+                <Text tone="subdued" variant="bodySm">
+                  Delivery preference
+                </Text>
+                <BlockStack gap="050">
+                  <Text variant="bodyMd">
+                    {SHIPPING_CHOICES.find((choice) => choice.value === shippingOption)?.label ?? 'Standard delivery'}
+                  </Text>
+                  <Text tone="subdued" variant="bodySm">
+                    Shipping from {company?.locations[0]?.name ?? 'primary distribution center'}
+                  </Text>
+                </BlockStack>
+              </div>
+              <div className="QuoteDetailSummaryCell">
+                <Text tone="subdued" variant="bodySm">
+                  Order reference
+                </Text>
+                <Text variant="bodyMd">{invoice.orderId ?? 'Not yet created'}</Text>
+              </div>
+            </div>
+          </BlockStack>
+        </Card>
+
+        <Grid gap="300">
+          <Grid.Cell columnSpan={{ xs: 6, md: 8 }}>
+            <Card className="PaymentMethodContainer">
+              <BlockStack gap="200">
+                <Text variant="headingSm">Choose payment method</Text>
+                <BlockStack gap="200" className="PaymentMethodList">
+                  {PAYMENT_METHODS.map((method) => (
+                    <PaymentMethodCard
+                      key={method.id}
+                      config={method}
+                      isActive={activeMethod === method.id}
+                      onToggle={() => handleMethodToggle(method.id)}
+                    >
+                      {renderActivePanel(method.id)}
+                    </PaymentMethodCard>
+                  ))}
+                </BlockStack>
+              </BlockStack>
             </Card>
-          </Layout.Section>
-
-          <Layout.Section variant="twoThirds">
-            <BlockStack gap="300">
-              {PAYMENT_METHODS.map((method) => (
-                <PaymentMethodCard
-                  key={method.id}
-                  config={method}
-                  isActive={activeMethod === method.id}
-                  onToggle={() => handleMethodToggle(method.id)}
-                >
-                  {renderActivePanel(method.id)}
-                </PaymentMethodCard>
-              ))}
-            </BlockStack>
-          </Layout.Section>
-
-          <Layout.Section variant="oneThird">
-            <BlockStack gap="300">
-              <Card>
-                <BlockStack gap="200">
-                  <InlineStack gap="200" blockAlign="center">
-                    <Icon source={CartIcon} tone="subdued" />
-                    <Text variant="headingSm">Order summary</Text>
-                  </InlineStack>
+          </Grid.Cell>
+          <Grid.Cell columnSpan={{ xs: 6, md: 4 }}>
+            <Card className="PaymentSummaryCard">
+              <BlockStack gap="200">
+                <Text variant="headingSm">Payment summary</Text>
+                <BlockStack gap="100">
                   {cartSummary.map(([label, value]) => (
-                    <InlineStack key={label} align="space-between">
+                    <InlineStack key={label} align="space-between" blockAlign="center">
                       <Text tone="subdued" variant="bodySm">
                         {label}
                       </Text>
-                      <Text variant="bodySm">{value}</Text>
+                      <Text variant="bodyMd">{value}</Text>
                     </InlineStack>
                   ))}
-                  <Divider />
-                  <InlineStack align="space-between" blockAlign="center">
-                    <Text variant="headingSm">Amount due</Text>
-                    <Text variant="headingLg">{formatCurrency(totalDue)}</Text>
-                  </InlineStack>
                 </BlockStack>
-              </Card>
+                <Divider />
+                <InlineStack align="space-between" blockAlign="center">
+                  <Text variant="headingSm">Total due</Text>
+                  <Text variant="headingLg">{formatCurrency(totalDue)}</Text>
+                </InlineStack>
+                <ChoiceList
+                  title="Delivery preference"
+                  titleHidden
+                  choices={SHIPPING_CHOICES}
+                  selected={[shippingOption]}
+                  onChange={(value) => setShippingOption(value[0] as typeof shippingOption)}
+                />
+                <Divider />
+                <BlockStack gap="050">
+                  <Text tone="subdued" variant="bodySm">
+                    Billing contact
+                  </Text>
+                  <Text variant="bodyMd">
+                    {company?.contacts[0]?.firstName} {company?.contacts[0]?.lastName}
+                  </Text>
+                  <Text tone="subdued" variant="bodySm">
+                    {company?.contacts[0]?.email}
+                  </Text>
+                </BlockStack>
+                <InlineStack gap="150" wrap>
+                  <Button variant="primary" onClick={handleConfirm}>
+                    Schedule payment
+                  </Button>
+                  <Button onClick={() => navigate(`/cx/invoices/${invoice.id}`)}>
+                    View invoice
+                  </Button>
+                </InlineStack>
+              </BlockStack>
+            </Card>
+          </Grid.Cell>
+        </Grid>
 
-              <Card>
-                <BlockStack gap="200">
-                  <Text variant="headingSm">Shipping choice</Text>
-                  <ChoiceList
-                    title="Shipping method"
-                    titleHidden
-                    choices={[
-                      { label: 'Standard freight (3-5 business days)', value: 'standard' },
-                      { label: 'Expedited delivery (2 business days)', value: 'expedited' },
-                      { label: 'Pickup at warehouse', value: 'pickup' },
-                    ]}
-                    selected={[shippingOption]}
-                    onChange={(value) => setShippingOption(value[0] as typeof shippingOption)}
-                  />
-                  <Text tone="subdued" variant="bodySm">
-                    Estimated delivery {formatDate(quote?.approxDeliveryDate ?? invoice.dueAt)}
-                  </Text>
-                </BlockStack>
-              </Card>
-
-              <Card>
-                <BlockStack gap="200">
-                  <Text variant="headingSm">Billing address</Text>
-                  <Text tone="subdued" variant="bodySm">
-                    {company?.locations.find((loc) => loc.isDefaultBilling)?.address.line1 ??
-                      'Billing address on file'}
-                  </Text>
-                  <Divider />
-                  <Text variant="headingSm">Shipping address</Text>
-                  <Text tone="subdued" variant="bodySm">
-                    {company?.locations.find((loc) => loc.isDefaultShipping)?.address.line1 ??
-                      'Shipping address on file'}
-                  </Text>
-                </BlockStack>
-              </Card>
+        {quote ? (
+          <Card>
+            <BlockStack gap="200">
+              <InlineStack gap="100" blockAlign="center">
+                <Icon source={NoteIcon} tone="subdued" />
+                <Text variant="headingSm">Linked quote</Text>
+              </InlineStack>
+              <BlockStack gap="050">
+                <Text variant="bodyMd" fontWeight="medium">
+                  {quote.quoteNumber}
+                </Text>
+                <Text tone="subdued" variant="bodySm">
+                  Expires {formatDate(quote.expiresAt)} ({formatTimeUntil(quote.expiresAt)})
+                </Text>
+              </BlockStack>
+              <Button variant="tertiary" onClick={() => navigate(`/cx/quotes/${quote.id}`)}>
+                View quote
+              </Button>
             </BlockStack>
-          </Layout.Section>
-        </Layout>
+          </Card>
+        ) : null}
       </BlockStack>
     </Page>
   );

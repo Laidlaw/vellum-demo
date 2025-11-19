@@ -337,6 +337,10 @@ body {
   gap: var(--p-space-150);
 }
 
+.MiniStatList {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
 .KeyValueList__Item {
   display: flex;
   flex-direction: column;
@@ -371,6 +375,54 @@ body {
 }
 
 .DashboardSnapshot .Polaris-BlockStack {
+  flex: 1;
+}
+
+.WorkstreamGrid {
+  display: grid;
+  gap: var(--p-space-200);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.WorkstreamGrid__Cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-150);
+  padding: var(--p-space-200);
+  background: var(--p-color-bg-subdued);
+  border-radius: var(--p-border-radius-200);
+}
+
+.WorkstreamGrid__Cell .Polaris-Button {
+  align-self: flex-start;
+}
+
+.DashboardGridFlush .Polaris-Grid {
+  align-items: stretch;
+}
+
+.DashboardGridFlush .Polaris-Grid__Cell > * {
+  height: 100%;
+}
+
+.PaymentMethodCard {
+  height: 100%;
+}
+
+.PaymentMethodList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--p-space-200);
+}
+
+.PaymentMethodContainer,
+.PaymentSummaryCard {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.PaymentSummaryCard .Polaris-BlockStack {
   flex: 1;
 }
 
