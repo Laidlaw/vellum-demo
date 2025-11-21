@@ -512,7 +512,7 @@ export function QuotesPage() {
                     icon={EmailFollowUpIcon}
                     accessibilityLabel="Send Pay Link"
                   >
-                    Send ay link
+                    Send Pay link
                   </Button>
                 </IndexTable.Cell>
               </IndexTable.Row>
