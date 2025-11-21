@@ -277,9 +277,21 @@ export function InvoicesPage() {
           </Text>
         </IndexTable.Cell>
         <IndexTable.Cell>
-          <Text as="span" variant="bodyMd">
-            {company?.name ?? '—'}
-          </Text>
+          {company ? (
+            <Link
+              monochrome
+              removeUnderline
+              onClick={() => navigate(`/mx/companies/${invoice.companyId}`)}
+            >
+              <Text as="span" variant="bodyMd">
+                {company.name}
+              </Text>
+            </Link>
+          ) : (
+            <Text as="span" variant="bodyMd">
+              —
+            </Text>
+          )}
         </IndexTable.Cell>
         <IndexTable.Cell>
           <Text as="span" variant="bodyMd">

@@ -7,6 +7,7 @@ import {
   Card,
   Divider,
   Icon,
+  InlineGrid,
   InlineStack,
   Page,
   Text,
@@ -421,232 +422,7 @@ export function CompanyDetailPage() {
               </InlineStack>
             )}
           </BlockStack>
-        </Card>
-
-        <Card id="company-credit">
-          <BlockStack gap="300">
-            <InlineStack align="space-between" blockAlign="center" wrap>
-              <Text as="h2" variant="headingSm">
-                Credit & compliance
-              </Text>
-              <Badge tone={company.taxExempt ? 'success' : 'attention'}>
-                {company.taxExempt ? 'Tax exempt' : 'Taxable'}
-              </Badge>
-            </InlineStack>
-            <div className="CompanyDetail__MetricRow">
-              <SummaryMetric label="Credit limit" value={formatCurrency(creditLimitAmount)} />
-              <SummaryMetric label="Credit used" value={formatCurrency(creditUsedAmount)} />
-              <SummaryMetric
-                label="Days past due"
-                value={company.credit.daysPastDue ? `${company.credit.daysPastDue} days` : 'Current'}
-                tone={company.credit.daysPastDue ? 'critical' : 'success'}
-              />
-            </div>
-            <Divider />
-            <BlockStack gap="200" className="CompanyDetail__Split">
-              <BlockStack gap="050">
-                <Text as="span" variant="bodySm" tone="subdued">
-                  Payment terms
-                </Text>
-                <Text as="span" variant="bodyMd">
-                  {company.paymentTerms.type === 'net'
-                    ? `Net ${company.paymentTerms.netDays ?? 0} with ${company.paymentTerms.discountPercent ?? 0}% quick-pay discount`
-                    : company.paymentTerms.type === 'installments'
-                      ? 'Installment plan available'
-                      : 'Due on receipt'}
-                </Text>
-                {company.paymentTerms.description ? (
-                  <Text as="span" tone="subdued" variant="bodySm">
-                    {company.paymentTerms.description}
-                  </Text>
-                ) : null}
-                {company.paymentTerms.installmentOptions?.length ? (
-                  <BlockStack gap="050" as="ul" className="CompanyDetail__List">
-                    {company.paymentTerms.installmentOptions.map((option) => (
-                      <li key={option.id}>
-                        <Text as="span" tone="subdued" variant="bodySm">
-                          {option.label}
-                          {option.minimumOrderAmount
-                            ? ` • Min ${formatCurrency(option.minimumOrderAmount.amount)}`
-                            : ''}
-                          {option.aprPercent !== undefined ? ` • ${formatPercentage(option.aprPercent)} APR` : ''}
-                        </Text>
-                      </li>
-                    ))}
-                  </BlockStack>
-                ) : null}
-              </BlockStack>
-              <BlockStack gap="050">
-                <Text as="span" variant="bodySm" tone="subdued">
-                  Last order placed
-                </Text>
-                <InlineStack gap="100" blockAlign="center">
-                  <Icon source={StoreIcon} tone="subdued" />
-                  <Text as="span" variant="bodyMd">
-                    {company.lastOrderAt ? formatDate(company.lastOrderAt) : 'No orders yet'}
-                  </Text>
-                </InlineStack>
-                {primaryContact ? (
-                  <Text as="span" tone="subdued" variant="bodySm">
-                    Primary contact: {primaryContact.firstName} {primaryContact.lastName}
-                  </Text>
-                ) : null}
-              </BlockStack>
-            </BlockStack>
-          </BlockStack>
-        </Card>
-
-        <Card id="company-payment-methods">
-          <BlockStack gap="300">
-            <InlineStack align="space-between" blockAlign="center" wrap>
-              <InlineStack gap="100" blockAlign="center">
-                <Icon source={CreditCardIcon} tone="subdued" />
-                <Text as="h2" variant="headingSm">
-                  Payment methods
-                </Text>
-              </InlineStack>
-              <Button variant="secondary">Assign payment method</Button>
-            </InlineStack>
-            <BlockStack gap="200">
-              {paymentMethods.length ? (
-                paymentMethods.map((method) => (
-                  <div key={method.id} className="CompanyDetail__PaymentMethod">
-                    <InlineStack align="space-between" blockAlign="start" wrap>
-                      <BlockStack gap="050">
-                        <InlineStack gap="100" blockAlign="center">
-                          <Badge tone={paymentStatusTone[method.status]}>{paymentTypeLabel[method.type]}</Badge>
-                          {method.isDefault ? (
-                            <Badge tone="success" progress="complete">
-                              Default
-                            </Badge>
-                          ) : null}
-                        </InlineStack>
-                        <Text as="span" variant="bodyMd">
-                          {method.label}
-                        </Text>
-                        {method.description ? (
-                          <Text as="span" tone="subdued" variant="bodySm">
-                            {method.description}
-                          </Text>
-                        ) : null}
-                        {method.capabilities?.length ? (
-                          <InlineStack gap="100" wrap>
-                            {method.capabilities.map((capability) => (
-                              <Badge key={capability} tone="subdued">
-                                {capability}
-                              </Badge>
-                            ))}
-                          </InlineStack>
-                        ) : null}
-                      </BlockStack>
-                      <BlockStack gap="050" align="end">
-                        <Text as="span" tone="subdued" variant="bodySm">
-                          {method.lastUsedAt ? `Last used ${formatDate(method.lastUsedAt)}` : 'Not yet used'}
-                        </Text>
-                        <Button variant="tertiary" size="slim" onClick={() => scrollToSection('company-payment-methods')}>
-                          Manage
-                        </Button>
-                      </BlockStack>
-                    </InlineStack>
-                  </div>
-                ))
-              ) : (
-                <InlineStack gap="150" blockAlign="center">
-                  <Icon source={MoneyFilledIcon} tone="subdued" />
-                  <Text as="span" tone="subdued" variant="bodySm">
-                    No payment methods on file yet.
-                  </Text>
-                </InlineStack>
-              )}
-            </BlockStack>
-          </BlockStack>
-        </Card>
-
-        <Card id="company-invoices">
-          <BlockStack gap="300">
-            <InlineStack align="space-between" blockAlign="center">
-              <Text as="h2" variant="headingSm">
-                Invoices
-              </Text>
-              <Button variant="secondary">Download aging report</Button>
-            </InlineStack>
-            {invoiceSummaries.length ? (
-              <BlockStack gap="150">
-                {invoiceSummaries.slice(0, 4).map((invoice) => (
-                  <div key={invoice.id} className="CompanyDetail__PaymentMethod">
-                    <InlineStack align="space-between" blockAlign="start">
-                      <BlockStack gap="050">
-                        <InlineStack gap="100" blockAlign="center">
-                          <Badge tone={invoiceStatusTone[invoice.status] ?? 'subdued'}>
-                            {invoice.status.toUpperCase()}
-                          </Badge>
-                          <Text as="span" variant="bodyMd">
-                            {invoice.number}
-                          </Text>
-                        </InlineStack>
-                        <Text as="span" tone="subdued" variant="bodySm">
-                          Due {formatDate(invoice.dueAt)} • Balance {formatCurrency(invoice.balanceDue)}
-                        </Text>
-                      </BlockStack>
-                      <Button size="slim" variant="tertiary">
-                        View invoice
-                      </Button>
-                    </InlineStack>
-                  </div>
-                ))}
-              </BlockStack>
-            ) : (
-              <Text as="span" tone="subdued" variant="bodySm">
-                No invoices recorded.
-              </Text>
-            )}
-          </BlockStack>
-        </Card>
-
-        <Card id="company-quotes">
-          <BlockStack gap="300">
-            <InlineStack align="space-between" blockAlign="center">
-              <Text as="h2" variant="headingSm">
-                Quotes
-              </Text>
-              <Button variant="secondary" onClick={handleCreateQuote}>
-                Start new quote
-              </Button>
-            </InlineStack>
-            {quoteSummaries.length ? (
-              <BlockStack gap="150">
-                {quoteSummaries.slice(0, 4).map((quote) => (
-                  <div key={quote.id} className="CompanyDetail__PaymentMethod">
-                    <InlineStack align="space-between" blockAlign="start">
-                      <BlockStack gap="050">
-                        <InlineStack gap="100" blockAlign="center">
-                          <Badge tone={quoteStatusTone[quote.status] ?? 'subdued'}>
-                            {quote.status.replace(/_/g, ' ')}
-                          </Badge>
-                          <Text as="span" variant="bodyMd">
-                            {quote.number}
-                          </Text>
-                        </InlineStack>
-                        <Text as="span" tone="subdued" variant="bodySm">
-                          Expires {formatDate(quote.expiresAt)} • Total {formatCurrency(quote.total)}
-                        </Text>
-                      </BlockStack>
-                      <Button size="slim" variant="tertiary">
-                        View quote
-                      </Button>
-                    </InlineStack>
-                  </div>
-                ))}
-              </BlockStack>
-            ) : (
-              <Text as="span" tone="subdued" variant="bodySm">
-                No quotes yet for this company.
-              </Text>
-            )}
-          </BlockStack>
-        </Card>
-
-        <Card id="company-activity">
+         
           <BlockStack gap="300">
             <InlineStack align="space-between" blockAlign="center">
               <Text as="h2" variant="headingSm">
@@ -680,7 +456,235 @@ export function CompanyDetailPage() {
               </Text>
             )}
           </BlockStack>
+        
         </Card>
+        <InlineGrid columns={2} gap="200">
+          <Card id="company-credit">
+            <BlockStack gap="300">
+              <InlineStack align="space-between" blockAlign="center" wrap>
+                <Text as="h2" variant="headingSm">
+                  Credit & compliance
+                </Text>
+                <Badge tone={company.taxExempt ? 'success' : 'attention'}>
+                  {company.taxExempt ? 'Tax exempt' : 'Taxable'}
+                </Badge>
+              </InlineStack>
+              <div className="CompanyDetail__MetricRow">
+                <SummaryMetric label="Credit limit" value={formatCurrency(creditLimitAmount)} />
+                <SummaryMetric label="Credit used" value={formatCurrency(creditUsedAmount)} />
+                <SummaryMetric
+                  label="Days past due"
+                  value={company.credit.daysPastDue ? `${company.credit.daysPastDue} days` : 'Current'}
+                  tone={company.credit.daysPastDue ? 'critical' : 'success'}
+                />
+              </div>
+              <Divider />
+              <BlockStack gap="200" className="CompanyDetail__Split">
+                <BlockStack gap="050">
+                  <Text as="span" variant="bodySm" tone="subdued">
+                    Payment terms
+                  </Text>
+                  <Text as="span" variant="bodyMd">
+                    {company.paymentTerms.type === 'net'
+                      ? `Net ${company.paymentTerms.netDays ?? 0} with ${company.paymentTerms.discountPercent ?? 0}% quick-pay discount`
+                      : company.paymentTerms.type === 'installments'
+                        ? 'Installment plan available'
+                        : 'Due on receipt'}
+                  </Text>
+                  {company.paymentTerms.description ? (
+                    <Text as="span" tone="subdued" variant="bodySm">
+                      {company.paymentTerms.description}
+                    </Text>
+                  ) : null}
+                  {company.paymentTerms.installmentOptions?.length ? (
+                    <BlockStack gap="050" as="ul" className="CompanyDetail__List">
+                      {company.paymentTerms.installmentOptions.map((option) => (
+                        <li key={option.id}>
+                          <Text as="span" tone="subdued" variant="bodySm">
+                            {option.label}
+                            {option.minimumOrderAmount
+                              ? ` • Min ${formatCurrency(option.minimumOrderAmount.amount)}`
+                              : ''}
+                            {option.aprPercent !== undefined ? ` • ${formatPercentage(option.aprPercent)} APR` : ''}
+                          </Text>
+                        </li>
+                      ))}
+                    </BlockStack>
+                  ) : null}
+                </BlockStack>
+
+                <BlockStack gap="050">
+                  <Text as="span" variant="bodySm" tone="subdued">
+                    Last order placed
+                  </Text>
+                  <InlineStack gap="100" blockAlign="center">
+                    <Icon source={StoreIcon} tone="subdued" />
+                    <Text as="span" variant="bodyMd">
+                      {company.lastOrderAt ? formatDate(company.lastOrderAt) : 'No orders yet'}
+                    </Text>
+                  </InlineStack>
+                  {primaryContact ? (
+                    <Text as="span" tone="subdued" variant="bodySm">
+                      Primary contact: {primaryContact.firstName} {primaryContact.lastName}
+                    </Text>
+                  ) : null}
+                </BlockStack>
+              </BlockStack>
+            </BlockStack>
+          </Card>
+
+          <Card id="company-payment-methods">
+            <BlockStack gap="300">
+              <InlineStack align="space-between" blockAlign="center" wrap>
+                <InlineStack gap="100" blockAlign="center">
+                  <Icon source={CreditCardIcon} tone="subdued" />
+                  <Text as="h2" variant="headingSm">
+                    Payment methods
+                  </Text>
+                </InlineStack>
+                <Button variant="secondary">Assign payment method</Button>
+              </InlineStack>
+              <BlockStack gap="200">
+                {paymentMethods.length ? (
+                  paymentMethods.map((method) => (
+                    <div key={method.id} className="CompanyDetail__PaymentMethod">
+                      <InlineStack align="space-between" blockAlign="start" wrap>
+                        <BlockStack gap="050">
+                          <InlineStack gap="100" blockAlign="center">
+                            <Badge tone={paymentStatusTone[method.status]}>{paymentTypeLabel[method.type]}</Badge>
+                            {method.isDefault ? (
+                              <Badge tone="success" progress="complete">
+                                Default
+                              </Badge>
+                            ) : null}
+                          </InlineStack>
+                          <Text as="span" variant="bodyMd">
+                            {method.label}
+                          </Text>
+                          {method.description ? (
+                            <Text as="span" tone="subdued" variant="bodySm">
+                              {method.description}
+                            </Text>
+                          ) : null}
+                          {method.capabilities?.length ? (
+                            <InlineStack gap="100" wrap>
+                              {method.capabilities.map((capability) => (
+                                <Badge key={capability} tone="subdued">
+                                  {capability}
+                                </Badge>
+                              ))}
+                            </InlineStack>
+                          ) : null}
+                        </BlockStack>
+                        <BlockStack gap="050" align="end">
+                          <Text as="span" tone="subdued" variant="bodySm">
+                            {method.lastUsedAt ? `Last used ${formatDate(method.lastUsedAt)}` : 'Not yet used'}
+                          </Text>
+                          <Button variant="tertiary" size="slim" onClick={() => scrollToSection('company-payment-methods')}>
+                            Manage
+                          </Button>
+                        </BlockStack>
+                      </InlineStack>
+                    </div>
+                  ))
+                ) : (
+                  <InlineStack gap="150" blockAlign="center">
+                    <Icon source={MoneyFilledIcon} tone="subdued" />
+                    <Text as="span" tone="subdued" variant="bodySm">
+                      No payment methods on file yet.
+                    </Text>
+                  </InlineStack>
+                )}
+              </BlockStack>
+            </BlockStack>
+          </Card>
+        </InlineGrid>
+        <InlineGrid columns={2} gap="200">
+          <Card id="company-invoices">
+            <BlockStack gap="300">
+              <InlineStack align="space-between" blockAlign="center">
+                <Text as="h2" variant="headingSm">
+                  Invoices
+                </Text>
+                <Button variant="secondary">Download aging report</Button>
+              </InlineStack>
+              {invoiceSummaries.length ? (
+                <BlockStack gap="150">
+                  {invoiceSummaries.slice(0, 4).map((invoice) => (
+                    <div key={invoice.id} className="CompanyDetail__PaymentMethod">
+                      <InlineStack align="space-between" blockAlign="start">
+                        <BlockStack gap="050">
+                          <InlineStack gap="100" blockAlign="center">
+                            <Badge tone={invoiceStatusTone[invoice.status] ?? 'subdued'}>
+                              {invoice.status.toUpperCase()}
+                            </Badge>
+                            <Text as="span" variant="bodyMd">
+                              {invoice.number}
+                            </Text>
+                          </InlineStack>
+                          <Text as="span" tone="subdued" variant="bodySm">
+                            Due {formatDate(invoice.dueAt)} • Balance {formatCurrency(invoice.balanceDue)}
+                          </Text>
+                        </BlockStack>
+                        <Button size="slim" variant="tertiary">
+                          View invoice
+                        </Button>
+                      </InlineStack>
+                    </div>
+                  ))}
+                </BlockStack>
+              ) : (
+                <Text as="span" tone="subdued" variant="bodySm">
+                  No invoices recorded.
+                </Text>
+              )}
+            </BlockStack>
+          </Card>
+
+          <Card id="company-quotes">
+            <BlockStack gap="300">
+              <InlineStack align="space-between" blockAlign="center">
+                <Text as="h2" variant="headingSm">
+                  Quotes
+                </Text>
+                <Button variant="secondary" onClick={handleCreateQuote}>
+                  Start new quote
+                </Button>
+              </InlineStack>
+              {quoteSummaries.length ? (
+                <BlockStack gap="150">
+                  {quoteSummaries.slice(0, 4).map((quote) => (
+                    <div key={quote.id} className="CompanyDetail__PaymentMethod">
+                      <InlineStack align="space-between" blockAlign="start">
+                        <BlockStack gap="050">
+                          <InlineStack gap="100" blockAlign="center">
+                            <Badge tone={quoteStatusTone[quote.status] ?? 'subdued'}>
+                              {quote.status.replace(/_/g, ' ')}
+                            </Badge>
+                            <Text as="span" variant="bodyMd">
+                              {quote.number}
+                            </Text>
+                          </InlineStack>
+                          <Text as="span" tone="subdued" variant="bodySm">
+                            Expires {formatDate(quote.expiresAt)} • Total {formatCurrency(quote.total)}
+                          </Text>
+                        </BlockStack>
+                        <Button size="slim" variant="tertiary">
+                          View quote
+                        </Button>
+                      </InlineStack>
+                    </div>
+                  ))}
+                </BlockStack>
+              ) : (
+                <Text as="span" tone="subdued" variant="bodySm">
+                  No quotes yet for this company.
+                </Text>
+              )}
+            </BlockStack>
+          </Card>
+        </InlineGrid>
+        
 
         <Card id="company-people">
           <BlockStack gap="300">

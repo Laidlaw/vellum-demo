@@ -93,7 +93,12 @@ function buildDefaultNavigation(
     { label: 'Orders', url: '/orders', icon: OrderIcon, disabled: true },
     { label: 'Products', url: '/products', icon: ProductIcon, disabled: true },
     ...customerNavItems,
-    { label: 'Quotes', url: '/quotes', icon: CheckCircleIcon, disabled: true },
+    {
+      label: 'Invoices',
+      url: '/quotes',
+      icon: CheckCircleIcon,
+      selected: normalizedPath.startsWith('/quotes'),
+    },
   ];
 
   return (

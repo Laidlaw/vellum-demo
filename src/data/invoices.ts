@@ -146,6 +146,159 @@ export const INVOICES: Invoice[] = [
     notes: 'Pending approval. Convert to posted invoice once quote is approved.',
   },
   {
+    id: 'inv-2024-0095',
+    invoiceNumber: 'INV-2024-0095',
+    companyId: 'comp-abstract-industrial',
+    quoteId: 'quote-2024-0168',
+    orderId: 'ORD-5021',
+    status: 'due',
+    issuedAt: '2024-10-01T09:15:00Z',
+    dueAt: '2024-10-31T23:59:00Z',
+    subtotal: usd(6_134.4),
+    taxTotal: usd(490.75),
+    shippingTotal: usd(120),
+    total: usd(6_745.15),
+    amountPaid: usd(0),
+    balanceDue: usd(6_745.15),
+    paymentTerms: {
+      type: 'net',
+      netDays: 30,
+      description: 'Standard net 30 terms for replenishment orders',
+      creditLimit: usd(150_000),
+    },
+    lineItems: [
+      {
+        id: 'inv-0095-1',
+        productId: 'prod-angle-grinder',
+        title: 'Heavy-duty angle grinder',
+        sku: 'ANG-GRD-850',
+        quantity: 12,
+        unitPrice: usd(189),
+        total: usd(2_268),
+      },
+      {
+        id: 'inv-0095-2',
+        productId: 'prod-led-worklight',
+        title: 'LED worklight tower',
+        sku: 'LED-WORK-TR',
+        quantity: 8,
+        unitPrice: usd(330),
+        total: usd(2_640),
+      },
+    ],
+    payments: [],
+    notes: 'Tool crib replenishment order. Candidate for inclusion in next pay run.',
+  },
+  {
+    id: 'inv-2024-0096',
+    invoiceNumber: 'INV-2024-0096',
+    companyId: 'comp-abstract-industrial',
+    status: 'partial',
+    issuedAt: '2024-08-01T11:20:00Z',
+    dueAt: '2024-09-01T23:59:00Z',
+    subtotal: usd(12_400),
+    taxTotal: usd(992),
+    shippingTotal: usd(0),
+    total: usd(13_392),
+    amountPaid: usd(6_696),
+    balanceDue: usd(6_696),
+    paymentTerms: {
+      type: 'net',
+      netDays: 30,
+      description: 'Net 30 with mid-month partial payments',
+      creditLimit: usd(150_000),
+    },
+    lineItems: [
+      {
+        id: 'inv-0096-1',
+        productId: 'prod-shop-shelving',
+        title: 'Adjustable Shop Shelving',
+        sku: 'SHELF-ADJ',
+        quantity: 20,
+        unitPrice: usd(340),
+        total: usd(6_800),
+      },
+      {
+        id: 'inv-0096-2',
+        productId: 'prod-led-task',
+        title: 'LED Task Light Kit',
+        sku: 'LED-TASK-SET',
+        quantity: 50,
+        unitPrice: usd(112),
+        total: usd(5_600),
+      },
+    ],
+    payments: [
+      {
+        id: 'payment-0096-1',
+        method: 'ach',
+        amount: usd(6_696),
+        processedAt: '2024-08-15T14:10:00Z',
+        reference: 'ACH-884120',
+      },
+    ],
+    notes: 'First half of balance paid via ACH. Remaining balance will be scheduled into next pay run.',
+  },
+  {
+    id: 'inv-2024-0097',
+    invoiceNumber: 'INV-2024-0097',
+    companyId: 'comp-abstract-industrial',
+    status: 'paid',
+    issuedAt: '2024-06-05T10:00:00Z',
+    dueAt: '2024-07-05T23:59:00Z',
+    paidAt: '2024-06-20T16:45:00Z',
+    subtotal: usd(4_250),
+    taxTotal: usd(340),
+    shippingTotal: usd(90),
+    total: usd(4_680),
+    amountPaid: usd(4_680),
+    balanceDue: usd(0),
+    paymentTerms: {
+      type: 'due_on_receipt',
+      description: 'Due on receipt for rush maintenance orders',
+      creditLimit: usd(150_000),
+    },
+    lineItems: [
+      {
+        id: 'inv-0097-1',
+        productId: 'prod-pressure-hose',
+        title: 'High-Pressure Hose Kit',
+        sku: 'HPH-10',
+        quantity: 8,
+        unitPrice: usd(217),
+        total: usd(1_736),
+      },
+      {
+        id: 'inv-0097-2',
+        productId: 'prod-thermal-gloves',
+        title: 'Thermal Safety Gloves (case of 24)',
+        sku: 'TSG-24',
+        quantity: 8,
+        unitPrice: usd(210),
+        total: usd(1_680),
+      },
+      {
+        id: 'inv-0097-3',
+        productId: 'prod-hard-hat',
+        title: 'Hard hat with LED light',
+        sku: 'HH-LED-02',
+        quantity: 10,
+        unitPrice: usd(83.4),
+        total: usd(834),
+      },
+    ],
+    payments: [
+      {
+        id: 'payment-0097-1',
+        method: 'check',
+        amount: usd(4_680),
+        processedAt: '2024-06-20T16:45:00Z',
+        reference: 'CHK-22104',
+      },
+    ],
+    notes: 'Paid in full via check. Use as an example of completed lifecycle.',
+  },
+  {
     id: 'inv-2024-0067',
     invoiceNumber: 'INV-2024-0067',
     companyId: 'comp-lynx-supply',
@@ -194,6 +347,29 @@ export const INVOICES: Invoice[] = [
       },
     ],
     notes: 'Send dunning reminder. Customer requested ACH payment extension.',
+    exceptions: [
+      {
+        id: 'ex-inv-0067-payment-1',
+        type: 'payment',
+        status: 'open',
+        openedAt: '2024-05-20T09:00:00Z',
+        summary: 'Overdue balance on installment-style net terms.',
+        rootCause: 'Customer requested extension beyond standard net 30.',
+        owner: 'Finance – AR',
+        relatedLineItemIds: ['inv-0067-1', 'inv-0067-2'],
+      },
+      {
+        id: 'ex-inv-0067-pricing-1',
+        type: 'pricing',
+        status: 'resolved',
+        openedAt: '2024-05-01T10:00:00Z',
+        resolvedAt: '2024-05-03T14:30:00Z',
+        summary: 'Volume discount incorrectly omitted on LED task lights.',
+        rootCause: 'Tiered pricing rule misconfigured in ERP.',
+        owner: 'Pricing ops',
+        relatedLineItemIds: ['inv-0067-2'],
+      },
+    ],
   },
 ];
 
@@ -202,3 +378,16 @@ export const getInvoicesForCompany = (companyId: string): Invoice[] =>
 
 export const getInvoiceById = (invoiceId: string): Invoice | undefined =>
   INVOICES.find((invoice) => invoice.id === invoiceId);
+
+export function markInvoicesScheduledForPayRun(
+  invoiceIds: string[],
+  plannedPaymentDate: string,
+  payRunId: string,
+): void {
+  INVOICES.forEach((invoice) => {
+    if (invoiceIds.includes(invoice.id)) {
+      invoice.plannedPaymentDate = plannedPaymentDate;
+      invoice.plannedPayRunId = payRunId;
+    }
+  });
+}

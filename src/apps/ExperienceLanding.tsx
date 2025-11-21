@@ -20,6 +20,18 @@ const experiences = [
     description: 'Walk through company management, customer lists, and merchant KPIs.',
     to: '/mx',
   },
+  {
+    id: 'finance-blueprint',
+    title: 'Finance service blueprint',
+    description: 'Visualize the finance journey in the customer admin UI end to end.',
+    to: '/finance-blueprint',
+  },
+  {
+    id: 'cui',
+    title: 'Customer Admin (Next)',
+    description: 'Modern customer admin UI with clearer wayfinding and finance workflows.',
+    to: '/cui',
+  },
 ];
 
 export function ExperienceLanding() {

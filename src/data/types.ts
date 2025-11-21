@@ -219,6 +219,23 @@ export interface Invoice {
   lineItems: InvoiceLineItem[];
   payments: InvoicePaymentRecord[];
   notes?: string;
+  exceptions?: InvoiceException[];
+  plannedPayRunId?: string;
+  plannedPaymentDate?: ISODateString;
+}
+
+export type InvoiceExceptionType = 'pricing' | 'delivery' | 'tax' | 'payment';
+
+export interface InvoiceException {
+  id: string;
+  type: InvoiceExceptionType;
+  status: 'open' | 'in_progress' | 'resolved';
+  openedAt: ISODateString;
+  resolvedAt?: ISODateString;
+  summary: string;
+  rootCause?: string;
+  owner?: string;
+  relatedLineItemIds?: string[];
 }
 
 export interface DatasetSummary {
